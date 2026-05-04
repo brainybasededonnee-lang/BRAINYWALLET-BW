@@ -1,0 +1,1244 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAINY WALLET (BW)</title>
+
+<style>
+body{
+  font-family: Arial,sans-serif;
+  background:#f0f6ff;
+  margin:0;
+}
+
+/* HEADER */
+header{
+  background:#007bff;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
+header img{
+  width:80px;
+  border-radius:50%;
+}
+
+/* CONTAINER */
+.container{
+  width:90%;
+  max-width:700px;
+  margin:30px auto;
+  background:white;
+  padding:25px;
+  border-radius:15px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.hidden{display:none;}
+h2{text-align:center;color:#007bff;}
+
+input, button, select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+  box-sizing: border-box;
+}
+button{
+  background:#007bff;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+.message{text-align:center;font-weight:bold;margin-top:10px;}
+
+/* WALLET CARD */
+.wallet-card{
+  background:linear-gradient(135deg,#0a7a18,#0f9d2f);
+  color:white;
+  border-radius:18px;
+  padding:20px;
+}
+.wallet-header{
+  display:flex;
+  justify-content:space-between;
+  font-weight:bold;
+}
+.wallet-main{
+  margin:20px 0;
+}
+.amount{
+  font-size:28px;
+  font-weight:bold;
+}
+.label{
+  font-size:14px;
+  opacity:0.9;
+}
+.wallet-footer{
+  display:flex;
+  gap:10px;
+}
+.box{
+  flex:1;
+  background:rgba(255,255,255,0.15);
+  border-radius:12px;
+  padding:10px;
+  text-align:center;
+}
+.box-title{font-size:12px;}
+.box-amount{font-size:16px;font-weight:bold;margin-top:5px;}
+
+/* Tombola & Actions */
+.tombola, .actions-section, .history-notif-section {
+  margin-top:20px;
+  text-align:center;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+.tombola input, .tombola button{
+  width:auto;
+  margin:5px;
+  padding:8px;
+}
+#tombolaGrid{
+  display:grid;
+  grid-template-columns: repeat(4, 50px);
+  gap:8px;
+  justify-content:center;
+  margin-top:15px;
+}
+.tombolaCell{
+  width:50px;
+  height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e0e0e0;
+  border-radius:8px;
+  font-weight:bold;
+  transition: background 0.2s;
+}
+.tombolaCell.active{
+  background: #ffcc00;
+}
+.tombolaCell.winner{
+  background: #28a745;
+  color:white;
+}
+
+/* HISTORIQUE ET NOTIFICATIONS */
+.scroll-box {
+  max-height: 250px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+.hist-item { border-bottom: 1px dashed #ccc; padding: 8px 0; display:flex; justify-content: space-between; align-items: center;}
+.hist-item:last-child { border-bottom: none; }
+.hist-positive { color: green; font-weight: bold; }
+.hist-negative { color: red; font-weight: bold; }
+.hist-neutral { color: #555; font-weight: bold; }
+
+.notif-item { padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height:1.4; }
+.notif-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.notif-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.notif-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+/* ADMIN DASHBOARD */
+.admin-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* ===== NOUVEAU: STATS ADMIN ÉTENDUES ===== */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+.stat-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-card .stat-label {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.stat-card .stat-value {
+  font-size: 17px;
+  font-weight: bold;
+  color: #007bff;
+}
+.stat-card.green  .stat-value { color: #28a745; }
+.stat-card.orange .stat-value { color: #fd7e14; }
+.stat-card.red    .stat-value { color: #dc3545; }
+.stat-card.purple .stat-value { color: #6f42c1; }
+.stat-card.teal   .stat-value { color: #17a2b8; }
+
+/* ===== NOUVEAU: BARRE FILTRE ===== */
+.admin-filter-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 4px 0;
+}
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 2px solid #007bff;
+  background: white;
+  color: #007bff;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  width: auto;
+  margin: 0;
+  transition: all 0.2s;
+}
+.filter-btn.active, .filter-btn:hover {
+  background: #007bff;
+  color: white;
+}
+.filter-btn.orange-btn { border-color: #fd7e14; color: #fd7e14; }
+.filter-btn.orange-btn.active, .filter-btn.orange-btn:hover { background: #fd7e14; color: white; }
+.filter-btn.red-btn { border-color: #dc3545; color: #dc3545; }
+.filter-btn.red-btn.active, .filter-btn.red-btn:hover { background: #dc3545; color: white; }
+
+.admin-table{
+  width:100%;
+  border-collapse: collapse;
+  margin-top:15px;
+  font-size: 14px;
+}
+.admin-table th, .admin-table td{
+  border:1px solid #ccc;
+  padding:8px;
+  text-align:center;
+}
+.admin-table th{
+  background:#007bff;
+  color:white;
+}
+.admin-action button{
+  padding:5px 10px;
+  margin:2px 0;
+  font-size:12px;
+  color:white;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.timer {
+    font-size: 12px;
+    color: #d9534f;
+    font-weight: bold;
+    display: block;
+    margin-top: 5px;
+}
+
+/* NOUVEAU: STYLES DU POPUP */
+.popup-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+.popup-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+.popup-content {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 320px;
+  width: 85%;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+}
+.popup-overlay.show .popup-content {
+  transform: translateY(0);
+}
+.popup-content h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+.popup-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 20px;
+  font-size: 14px;
+  width: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<div id="customPopup" class="popup-overlay">
+  <div class="popup-content">
+      <h3 id="popupTitle">Notification</h3>
+      <p id="popupMessage">Message</p>
+      <button class="popup-btn" onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<!-- POPUP NOTIFICATIONS -->
+<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
+  <div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+    <div style="background:#e0a800; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
+      <strong style="font-size:16px;">🔔 Notifications Récentes</strong>
+      <button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0; width:auto;">✕</button>
+    </div>
+    <div id="notifPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div>
+  </div>
+</div>
+
+<!-- POPUP HISTORIQUE -->
+<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
+  <div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+    <div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
+      <strong style="font-size:16px;">📜 Historique des Transactions</strong>
+      <button onclick="closeHistoryPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0; width:auto;">✕</button>
+    </div>
+    <div id="histPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div>
+  </div>
+</div>
+
+<header>
+  <img src="">
+  <h1>BRAINY WALLET (BW)</h1>
+</header>
+
+<div class="container" id="register-section">
+<h2>Inscription</h2>
+<input id="fullName" placeholder="Nom complet">
+<input id="phone" placeholder="Téléphone">
+<input id="email" placeholder="Email">
+<input id="address" placeholder="Adresse">
+<input id="paymentNumber" placeholder="Numéro Flooz ou Mixx">
+<input id="inviteCode" placeholder="Code d'invitation">
+<input id="password" type="password" placeholder="Mot de passe">
+<button onclick="register()">S'inscrire</button>
+<p class="message" id="register-message"></p>
+<p style="text-align:center">
+Déjà membre ? <a href="#" onclick="showLogin()">Se connecter</a>
+</p>
+</div>
+
+<div class="container hidden" id="login-section">
+<h2>Connexion</h2>
+<input id="login-email" placeholder="Email">
+<input id="login-password" type="password" placeholder="Mot de passe">
+<button onclick="login()">Se connecter</button>
+<p class="message" id="login-message"></p>
+</div>
+
+<div class="container hidden" id="dashboard-section">
+
+<div class="wallet-card">
+  <div class="wallet-header">
+    <span id="clientName">Nom Client</span>
+    <div style="display:flex; gap:8px;">
+      <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
+        🔔 Notifs
+        <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+      </button>
+      <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
+        📜 Historique
+        <span id="histBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="wallet-main">
+    <div class="amount" id="balanceAmount">0 FCFA</div>
+    <div class="label">Solde disponible</div>
+  </div>
+
+  <div class="wallet-footer">
+    <div class="box">
+      <div class="box-title">Solde total généré</div>
+      <div class="box-amount" id="totalGenerated">0 FCFA</div>
+    </div>
+    <div class="box">
+      <div class="box-title">Payé</div>
+      <div class="box-amount" id="totalWithdrawn">0 FCFA</div>
+    </div>
+  </div>
+</div>
+
+<br>
+<input type="number" id="withdrawAmount" placeholder="Montant retrait à demander">
+<button onclick="requestWithdrawal()">Demande de retrait</button>
+<p class="message" id="withdrawMessage"></p>
+
+<div class="tombola">
+  <h3>Jeu de Tombola</h3>
+  <input type="number" id="tombolaNumber" placeholder="Choisir un numéro 0-15" min="0" max="15">
+  <input type="number" id="tombolaBet" placeholder="Votre mise (100-10000 FCFA)" min="100" max="10000">
+  <button onclick="playTombola()">Lancer le jeu</button>
+  <div id="tombolaGrid"></div>
+  <div id="result"></div>
+</div>
+
+<div class="actions-section">
+  <h3>Acheter des Actions</h3>
+  <input type="text" id="actionName" placeholder="Entrez le nom de votre action">
+  
+  <input type="number" id="actionStake" placeholder="Montant de la mise (FCFA)">
+  
+  <select id="actionTime">
+    <option value="7 Jours">7 Jours</option>
+    <option value="16 Jours">16 Jours</option>
+    <option value="30 Jours">30 Jours</option>
+    <option value="3 Mois">3 Mois</option>
+    <option value="5 Mois">5 Mois</option>
+    <option value="6 Mois">6 Mois</option>
+    <option value="8 Mois">8 Mois</option>
+  </select>
+  
+  <button onclick="buyAction()" style="background: #28a745;">Valider l'achat d'action</button>
+  <p class="message" id="actionMessage"></p>
+
+  <h4 style="text-align:left; color:#007bff; border-bottom:1px solid #ddd; padding-bottom:5px;">Mes actions en cours</h4>
+  <div id="clientActionsList" class="scroll-box"></div>
+</div>
+
+<!-- Les listes sont maintenant dans des popups, on garde les divs cachés pour le rendu -->
+<div style="display:none;">
+  <div id="clientNotificationsList"></div>
+  <div id="clientHistoryList"></div>
+</div>
+
+<br>
+<button onclick="logout()" style="background:#dc3545;">Se déconnecter</button>
+</div>
+
+<!-- ===== SECTION ADMIN ===== -->
+<div class="container hidden" id="admin-section" style="max-width: 960px;">
+<h2>Dashboard Admin</h2>
+
+<!-- NOUVEAU: GRILLE DE STATISTIQUES ÉTENDUE -->
+<div class="admin-stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">👥 Total Clients</div>
+    <div class="stat-value" id="totalClients">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">💰 Solde Total</div>
+    <div class="stat-value" id="totalBalance">0 FCFA</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-label">⏳ Retraits en Attente</div>
+    <div class="stat-value" id="pendingRequests">0</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-label">💸 Montant Total Retiré</div>
+    <div class="stat-value" id="statTotalWithdrawn">0 FCFA</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-label">📋 Actions en Attente</div>
+    <div class="stat-value" id="statActionsEnAttente">0</div>
+  </div>
+  <div class="stat-card teal">
+    <div class="stat-label">⚙️ Actions en Cours</div>
+    <div class="stat-value" id="statActionsEnCours">0</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">✅ Actions Terminées</div>
+    <div class="stat-value" id="statActionsTerminees">0</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-label">💳 Actions Payées</div>
+    <div class="stat-value" id="statActionsPaees">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">🏦 Total Misé (Actions)</div>
+    <div class="stat-value" id="statTotalMise">0 FCFA</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">🏆 Gains Totaux Payés</div>
+    <div class="stat-value" id="statTotalGains">0 FCFA</div>
+  </div>
+</div>
+
+<!-- NOUVEAU: BARRE DE RECHERCHE AMÉLIORÉE + FILTRES -->
+<input type="text" id="searchUser" placeholder="🔍 Rechercher par nom ou email..." oninput="loadAdminTable()" style="margin-top:15px;">
+
+<div class="admin-filter-bar">
+  <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">Tous</button>
+  <button class="filter-btn orange-btn" id="filterPendingWithdraw" onclick="setFilter('pendingWithdraw')">⏳ Retrait en Attente</button>
+  <button class="filter-btn orange-btn" id="filterPendingAction" onclick="setFilter('pendingAction')">📋 Action en Attente</button>
+  <button class="filter-btn red-btn" id="filterUnpaidAction" onclick="setFilter('unpaidAction')">💳 Action Non Payée</button>
+</div>
+
+<div style="overflow-x:auto;">
+<table class="admin-table">
+<thead>
+<tr>
+<th>Nom</th>
+<th>Email</th>
+<th>Solde</th>
+<th>Retraits</th>
+<th>Actions Client</th> 
+<th>Menu</th>
+</tr>
+</thead>
+<tbody id="adminTableBody"></tbody>
+</table>
+</div>
+
+<button onclick="logout()" style="margin-top:10px;background:red;">Se déconnecter</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut } 
+from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore,doc,setDoc,getDoc,updateDoc,collection,getDocs,arrayUnion } 
+from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI",
+  authDomain: "brainy-wallet.firebaseapp.com",
+  projectId: "brainy-wallet",
+  storageBucket: "brainy-wallet.firebasestorage.app",
+  messagingSenderId: "554152129336",
+  appId: "1:554152129336:web:997fe6b439d6ccac0707cd"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let currentUser=null;
+let timersIntervals = [];
+
+// ===== NOUVEAU: ÉTAT DU FILTRE ACTIF =====
+let activeFilter = 'all';
+
+window.setFilter = (filter) => {
+  activeFilter = filter;
+  // Mise à jour visuelle des boutons
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  const btnMap = { all: 'filterAll', pendingWithdraw: 'filterPendingWithdraw', pendingAction: 'filterPendingAction', unpaidAction: 'filterUnpaidAction' };
+  const targetBtn = document.getElementById(btnMap[filter]);
+  if (targetBtn) targetBtn.classList.add('active');
+  loadAdminTable();
+};
+
+// NOUVEAU: LOGIQUE DU POPUP ET TRADUCTION DES ERREURS
+window.showPopup = (title, message, isError = false) => {
+    const popup = document.getElementById("customPopup");
+    const titleEl = document.getElementById("popupTitle");
+    titleEl.textContent = title;
+    titleEl.style.color = isError ? "#dc3545" : "#28a745"; 
+    document.getElementById("popupMessage").textContent = message;
+    popup.classList.add("show");
+};
+
+window.closePopup = () => {
+    document.getElementById("customPopup").classList.remove("show");
+};
+
+const translateFirebaseError = (error) => {
+    switch(error.code) {
+        case 'auth/email-already-in-use': return "Cette adresse e-mail est déjà utilisée par un autre compte.";
+        case 'auth/invalid-email': return "L'adresse e-mail n'est pas valide.";
+        case 'auth/weak-password': return "Le mot de passe est trop faible (6 caractères minimum).";
+        case 'auth/user-not-found': return "Aucun compte trouvé avec cette adresse e-mail.";
+        case 'auth/wrong-password': return "Le mot de passe est incorrect.";
+        case 'auth/invalid-credential': return "L'e-mail ou le mot de passe est incorrect.";
+        case 'auth/network-request-failed': return "Problème de connexion internet. Vérifiez votre réseau.";
+        case 'auth/too-many-requests': return "Trop de tentatives échouées. Veuillez patienter et réessayer.";
+        case 'auth/missing-password': return "Veuillez entrer un mot de passe.";
+        case 'auth/missing-email': return "Veuillez entrer une adresse e-mail.";
+        default: return "Une erreur s'est produite. Veuillez réessayer."; 
+    }
+};
+
+// Grille Tombola
+const tombolaGrid=document.getElementById("tombolaGrid");
+for(let i=0;i<16;i++){
+  const cell=document.createElement("div");
+  cell.className="tombolaCell";
+  cell.textContent=i;
+  tombolaGrid.appendChild(cell);
+}
+
+// UI Renders
+window.renderClientHistory = (historyArray) => {
+  const list = document.getElementById("clientHistoryList");
+  if(!historyArray || historyArray.length === 0){
+    list.innerHTML = "<i>Aucune transaction.</i>";
+    return;
+  }
+  const reversed = [...historyArray].reverse();
+  list.innerHTML = reversed.map((h) => {
+    let colorClass = h.amount > 0 ? "hist-positive" : (h.amount < 0 ? "hist-negative" : "hist-neutral");
+    let sign = h.amount > 0 ? "+" : "";
+    let dateStr = new Date(h.date).toLocaleString('fr-FR', {dateStyle: 'short', timeStyle: 'short'});
+    return `<div class="hist-item">
+      <div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${dateStr} | ${h.desc}</span></div>
+      <div class="${colorClass}">${sign}${h.amount} FCFA</div>
+    </div>`;
+  }).join("");
+};
+
+window.renderClientNotifications = (notifArray) => {
+  const list = document.getElementById("clientNotificationsList");
+  if(!notifArray || notifArray.length === 0){
+    list.innerHTML = "<i>Aucune notification.</i>";
+    return;
+  }
+  const reversed = [...notifArray].reverse();
+  list.innerHTML = reversed.map((n) => {
+    let dateStr = new Date(n.date).toLocaleString('fr-FR', {dateStyle: 'short', timeStyle: 'short'});
+    let typeClass = n.type === 'success' ? 'notif-success' : (n.type === 'error' ? 'notif-error' : 'notif-info');
+    return `<div class="notif-item ${typeClass}">
+      <div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${dateStr}</div>
+      <div>${n.message}</div>
+    </div>`;
+  }).join("");
+};
+
+window.showLogin=()=>{
+  document.getElementById("register-section").classList.add("hidden");
+  document.getElementById("login-section").classList.remove("hidden");
+};
+
+window.register=async()=>{
+    const msg=document.getElementById("register-message");
+    msg.textContent="Création...";
+    try{
+        const email=document.getElementById("email").value;
+        const password=document.getElementById("password").value;
+        
+        if(!email || !password) throw {code: "auth/missing-email"};
+
+        const userCred=await createUserWithEmailAndPassword(auth,email,password);
+        await setDoc(doc(db,"users",userCred.user.uid),{
+            fullName:document.getElementById("fullName").value,
+            phone:document.getElementById("phone").value,
+            email:email,
+            address:document.getElementById("address").value,
+            paymentNumber:document.getElementById("paymentNumber").value,
+            inviteCode:document.getElementById("inviteCode").value,
+            balance:0,
+            totalGenerated:0,
+            totalWithdrawn:0,
+            withdrawRequests:[],
+            actions:[],
+            history:[],
+            notifications:[],
+            createdAt:new Date()
+        });
+        msg.textContent="";
+        showPopup("Succès !", "Votre compte a été créé avec succès.", false);
+        showLogin();
+    }catch(e){ 
+        msg.textContent="";
+        showPopup("Erreur d'inscription", translateFirebaseError(e), true); 
+    }
+};
+
+window.login=async()=>{
+    const msg=document.getElementById("login-message");
+    const email=document.getElementById("login-email").value;
+    const password=document.getElementById("login-password").value;
+
+    if(email==="mawoukobrainy@gmail.com" && password==="963689"){
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("admin-section").classList.remove("hidden");
+        loadAdminTable();
+        return;
+    }
+
+    msg.textContent="Connexion...";
+    try{
+        if(!email || !password) throw {code: "auth/missing-email"};
+
+        const userCred=await signInWithEmailAndPassword(auth,email,password);
+        currentUser = userCred.user;
+        const snap=await getDoc(doc(db,"users",currentUser.uid));
+        const user=snap.data();
+
+        msg.textContent="";
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("dashboard-section").classList.remove("hidden");
+
+        document.getElementById("clientName").textContent=user.fullName;
+        document.getElementById("balanceAmount").textContent=user.balance+" FCFA";
+        document.getElementById("totalGenerated").textContent=(user.totalGenerated||0)+" FCFA";
+        document.getElementById("totalWithdrawn").textContent=(user.totalWithdrawn||0)+" FCFA";
+
+        renderClientActions(user.actions || []);
+        renderClientHistory(user.history || []);
+        renderClientNotifications(user.notifications || []);
+
+        // Stocker pour les popups et calculer les badges
+        window._clientNotifications = user.notifications || [];
+        window._clientHistory = user.history || [];
+        window.updateBadges();
+    }catch(e){ 
+        msg.textContent="";
+        showPopup("Erreur de connexion", translateFirebaseError(e), true); 
+    }
+};
+
+window.logout=()=>{ location.reload(); };
+
+// --- ACTIONS & TIMER LOGIC ---
+window.buyAction = async () => {
+  if(!currentUser) return;
+  const stake = parseInt(document.getElementById("actionStake").value);
+  const name = document.getElementById("actionName").value;
+  const timeStr = document.getElementById("actionTime").value;
+
+  if (!name) return showPopup("Attention", "Veuillez donner un nom à votre action", true);
+  if (isNaN(stake) || stake <= 0) return showPopup("Attention", "Mise invalide", true);
+
+  if(stake >= 5001 && timeStr === "7 Jours") return showPopup("Refusé", "Mise supérieure à 5000F : La durée de 7 jours n'est plus autorisée.", true);
+  if(stake >= 15000 && timeStr === "16 Jours") return showPopup("Refusé", "Mise supérieure à 15000F : La durée de 16 jours n'est plus autorisée.", true);
+  if(stake >= 25000 && timeStr === "30 Jours") return showPopup("Refusé", "Mise supérieure à 25000F : La durée de 30 jours n'est plus autorisée.", true);
+  if(stake >= 35000 && timeStr === "3 Mois") return showPopup("Refusé", "Mise supérieure à 35000F : La durée de 3 mois n'est plus autorisée.", true);
+  if(stake >= 40000 && timeStr === "5 Mois") return showPopup("Refusé", "Mise supérieure à 40000F : La durée de 5 mois n'est plus autorisée.", true);
+  if(stake >= 55000 && timeStr === "5 Mois") return showPopup("Refusé", "Mise supérieure à 55000F : La durée de 5 mois n'est plus autorisée.", true);
+  if(stake >= 35000 && timeStr === "6 Mois") return showPopup("Refusé", "Mise supérieure à 35000F : La durée de 6 mois n'est plus autorisée.", true);
+  if(stake >= 60000 && timeStr === "8 Mois") return showPopup("Refusé", "Mise supérieure à 60000F : La durée de 8 mois n'est plus autorisée.", true);
+
+  const snap = await getDoc(doc(db,"users",currentUser.uid));
+  let userData = snap.data();
+  if (userData.balance < stake) return showPopup("Attention", "Solde insuffisant", true);
+
+  const newAction = {
+    name: name,
+    stake: stake,
+    time: timeStr,
+    status: "en attente",
+    date: new Date().toISOString(),
+    expiryDate: null 
+  };
+
+  await updateDoc(doc(db,"users",currentUser.uid), { 
+    actions: arrayUnion(newAction),
+    history: arrayUnion({date: new Date().toISOString(), type: 'Achat Action', amount: 0, desc: `Attente: ${name}`})
+  });
+  
+  showPopup("Succès", "Action achetée et en attente de validation.", false);
+  setTimeout(() => location.reload(), 1500);
+};
+
+window.renderClientActions = (actionsArray) => {
+  const list = document.getElementById("clientActionsList");
+  timersIntervals.forEach(clearInterval); 
+  
+  if(actionsArray.length === 0){
+    list.innerHTML = "<i>Aucune action.</i>";
+    return;
+  }
+
+  list.innerHTML = actionsArray.map((act, index) => {
+    let color = act.status === "validé" ? "green" : "orange";
+    let timerId = `timer-${index}`;
+    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;">
+      <strong>${act.name}</strong> - ${act.stake} FCFA
+      <span style="float:right; color:${color}; font-weight:bold;">${act.status}</span>
+      ${act.status === "validé" ? `<span class="timer" id="${timerId}">Calcul du temps...</span>` : ''}
+    </div>`;
+  }).join("");
+
+  actionsArray.forEach((act, index) => {
+    if(act.status === "validé" && act.expiryDate){
+        startTimer(act.expiryDate, `timer-${index}`);
+    }
+  });
+};
+
+function startTimer(expiryDateStr, elementId) {
+    const target = new Date(expiryDateStr).getTime();
+    const timerFunc = setInterval(() => {
+        const now = new Date().getTime();
+        const diff = target - now;
+        const el = document.getElementById(elementId);
+        if(!el) return clearInterval(timerFunc);
+
+        if (diff <= 0) {
+            el.textContent = "Action Terminée !";
+            el.style.color = "green";
+            clearInterval(timerFunc);
+        } else {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            el.textContent = `Temps restant: ${days}j ${hours}h ${mins}m ${secs}s`;
+        }
+    }, 1000);
+    timersIntervals.push(timerFunc);
+}
+
+// --- ADMIN FUNCTIONS ---
+async function loadAdminTable(){
+  const tbody=document.getElementById("adminTableBody");
+  tbody.innerHTML="<tr><td colspan='6' style='color:#999; padding:20px;'>Chargement...</td></tr>";
+
+  // ===== NOUVEAU: Lecture du filtre et de la recherche =====
+  const searchRaw = (document.getElementById("searchUser").value || "").trim().toLowerCase();
+  
+  const querySnapshot = await getDocs(collection(db,"users"));
+
+  // Collecte de tous les documents d'abord pour calculer les stats globales
+  let allUsers = [];
+  querySnapshot.forEach(docSnap => allUsers.push({ id: docSnap.id, data: docSnap.data() }));
+
+  // ===== NOUVEAU: Calcul des statistiques globales =====
+  let totalC = 0, totalB = 0, pend = 0;
+  let statTotalWithdrawn = 0;
+  let statActionsEnAttente = 0, statActionsEnCours = 0, statActionsTerminees = 0, statActionsPaees = 0;
+  let statTotalMise = 0, statTotalGains = 0;
+  const now = new Date();
+
+  allUsers.forEach(({ data: user }) => {
+    totalC++;
+    totalB += (user.balance || 0);
+    // Retraits en attente
+    (user.withdrawRequests || []).forEach(r => {
+      if (r.status === "en attente") pend++;
+      if (r.status === "validé") statTotalWithdrawn += (r.amount || 0);
+    });
+    // Actions
+    (user.actions || []).forEach(a => {
+      if (a.status === "en attente") {
+        statActionsEnAttente++;
+      } else if (a.status === "validé") {
+        statTotalMise += (a.stake || 0);
+        if (a.isPaid) {
+          statActionsPaees++;
+        } else if (a.expiryDate && now.getTime() >= new Date(a.expiryDate).getTime()) {
+          statActionsTerminees++;
+        } else {
+          statActionsEnCours++;
+        }
+      }
+    });
+    // Gains payés via totalGenerated
+    statTotalGains += (user.totalGenerated || 0);
+  });
+
+  // Mise à jour des stats dans l'interface
+  document.getElementById("totalClients").textContent = totalC;
+  document.getElementById("totalBalance").textContent = totalB + " FCFA";
+  document.getElementById("pendingRequests").textContent = pend;
+  document.getElementById("statTotalWithdrawn").textContent = statTotalWithdrawn + " FCFA";
+  document.getElementById("statActionsEnAttente").textContent = statActionsEnAttente;
+  document.getElementById("statActionsEnCours").textContent = statActionsEnCours;
+  document.getElementById("statActionsTerminees").textContent = statActionsTerminees;
+  document.getElementById("statActionsPaees").textContent = statActionsPaees;
+  document.getElementById("statTotalMise").textContent = statTotalMise + " FCFA";
+  document.getElementById("statTotalGains").textContent = statTotalGains + " FCFA";
+
+  // ===== NOUVEAU: Filtrage par recherche (nom OU email, priorité exacte puis partielle) =====
+  let filteredUsers = allUsers;
+
+  if (searchRaw) {
+    // Tri avec priorité : correspondance exacte en premier, puis commence par, puis contient
+    const score = (user) => {
+      const name = (user.data.fullName || "").toLowerCase();
+      const email = (user.data.email || "").toLowerCase();
+      if (name === searchRaw || email === searchRaw) return 3;
+      if (name.startsWith(searchRaw) || email.startsWith(searchRaw)) return 2;
+      if (name.includes(searchRaw) || email.includes(searchRaw)) return 1;
+      return 0;
+    };
+    filteredUsers = allUsers.map(u => ({ ...u, score: score(u) }))
+                            .filter(u => u.score > 0)
+                            .sort((a, b) => b.score - a.score);
+  }
+
+  // ===== NOUVEAU: Filtrage par type (retrait en attente / action en attente / action non payée) =====
+  if (activeFilter === 'pendingWithdraw') {
+    filteredUsers = filteredUsers.filter(({ data: user }) =>
+      (user.withdrawRequests || []).some(r => r.status === "en attente")
+    );
+  } else if (activeFilter === 'pendingAction') {
+    filteredUsers = filteredUsers.filter(({ data: user }) =>
+      (user.actions || []).some(a => a.status === "en attente")
+    );
+  } else if (activeFilter === 'unpaidAction') {
+    filteredUsers = filteredUsers.filter(({ data: user }) =>
+      (user.actions || []).some(a => a.status === "validé" && !a.isPaid)
+    );
+  }
+
+  tbody.innerHTML = "";
+
+  if (filteredUsers.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='6' style='color:#999; padding:20px;'>Aucun utilisateur trouvé.</td></tr>";
+    return;
+  }
+
+  filteredUsers.forEach(({ id: docId, data: user }) => {
+    const tr = document.createElement("tr");
+
+    // HTML Actions Client (inchangé)
+    const actionsHTML=(user.actions || []).map((a,i)=>{
+      let titleColor = a.status === "validé" ? "green" : "orange";
+      let actionBtn = "";
+      let dateText = "";
+      let divBg = "transparent";
+
+      if (a.status === "en attente") {
+         actionBtn = `<button onclick='adminValidateAction("${docId}", ${i})' style="background:#28a745; font-size:10px;">Valider & Prélèver</button>`;
+      } else {
+         if (a.expiryDate) {
+             let ed = new Date(a.expiryDate);
+             dateText = `<br><span style="font-size:10px; color:#555;">Fin: ${ed.toLocaleDateString('fr-FR')} à ${ed.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>`;
+             
+             let nowCheck = new Date();
+             if (a.isPaid) {
+                 divBg = "#cce5ff"; 
+                 titleColor = "#004085";
+                 actionBtn = `<button disabled style="background:#007bff; color:white; font-size:10px; border:none; border-radius:4px; width:100%; padding:4px;">Gain Payé</button>`;
+             } else if (nowCheck.getTime() >= ed.getTime()) {
+                 divBg = "#f8d7da"; 
+                 titleColor = "#721c24";
+                 actionBtn = `<button onclick='adminPayGain("${docId}", ${i})' style="background:#dc3545; color:white; font-size:10px; border:none; border-radius:4px; width:100%; padding:4px;">Payer Gain (Expiré)</button>`;
+             } else {
+                 actionBtn = `<button onclick='adminPayGain("${docId}", ${i})' style="background:#ffc107; color:black; font-size:10px; border:none; border-radius:4px; width:100%; padding:4px;">Payer Gain</button>`;
+             }
+         } else {
+             actionBtn = `<button onclick='adminPayGain("${docId}", ${i})' style="background:#ffc107; color:black; font-size:10px;">Payer Gain</button>`;
+         }
+      }
+
+      return `<div style="background:${divBg}; border-bottom:1px solid #ccc; padding:6px; margin-bottom:4px; border-radius:5px; text-align:left;">
+        <span style="color:${titleColor}; font-weight:bold;">${a.name} (${a.stake}F)</span>${dateText}<br>
+        <div style="margin-top:4px;">${actionBtn}</div>
+      </div>`;
+    }).join("");
+
+    // Affichage des retraits dans la colonne "Retraits" (inchangé)
+    const withdrawsHTML = (user.withdrawRequests || []).map((req, i) => {
+        if (req.status === "en attente") {
+            return `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:8px; margin-bottom:5px; border-radius:5px; text-align:left; font-size:12px;">
+                <div style="margin-bottom:5px;">Demande: <strong style="color:#856404; font-size:14px;">${req.amount} F</strong></div>
+                <div style="margin-bottom:8px;">Solde dispo: <strong>${user.balance} F</strong></div>
+                <div style="display:flex; gap:5px;">
+                  <button onclick='adminApproveWithdrawal("${docId}", ${i})' style="background:#28a745; color:white; border:none; border-radius:4px; padding:5px; flex:1; font-size:11px;">Valider</button>
+                  <button onclick='adminRejectWithdrawal("${docId}", ${i})' style="background:#dc3545; color:white; border:none; border-radius:4px; padding:5px; flex:1; font-size:11px;">Rejeter</button>
+                </div>
+            </div>`;
+        } else {
+            let color = req.status === "validé" ? "green" : "red";
+            return `<div style="font-size:11px; color:${color}; padding:2px; text-align:left; border-bottom:1px solid #eee;">
+                ${req.amount} F - ${req.status}
+            </div>`;
+        }
+    }).join("");
+
+    tr.innerHTML=`
+      <td>${user.fullName}</td>
+      <td>${user.email}</td>
+      <td><strong>${user.balance} FCFA</strong></td>
+      <td>${withdrawsHTML || '-'}</td>
+      <td>${actionsHTML || '-'}</td>
+      <td class="admin-action">
+        <button onclick='addDepositPrompt("${docId}")' style="background:blue; width:100%;">Ajouter Dépôt</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// NOUVEAU: Fonction Valider Retrait Admin (inchangée)
+window.adminApproveWithdrawal = async (uid, idx) => {
+    const snap = await getDoc(doc(db,"users",uid));
+    let userData = snap.data();
+    let req = userData.withdrawRequests[idx];
+
+    if(userData.balance < req.amount) {
+        return alert("Impossible de valider : le solde actuel du client ("+userData.balance+"F) est inférieur au montant demandé ("+req.amount+"F).");
+    }
+
+    userData.balance -= req.amount;
+    userData.totalWithdrawn = (userData.totalWithdrawn || 0) + req.amount;
+    req.status = "validé";
+
+    userData.history.push({date: new Date().toISOString(), type:'Retrait Validé', amount: -req.amount, desc: `Demande approuvée par l'admin`});
+    userData.notifications.push({date: new Date().toISOString(), message: `Excellente nouvelle ! Votre demande de retrait de ${req.amount} FCFA a été validée.`, type:'success'});
+
+    await updateDoc(doc(db,"users",uid), { 
+        balance: userData.balance, 
+        totalWithdrawn: userData.totalWithdrawn,
+        withdrawRequests: userData.withdrawRequests,
+        history: userData.history,
+        notifications: userData.notifications
+    });
+    
+    alert("Retrait validé avec succès ! Le solde a été déduit et le client est notifié.");
+    loadAdminTable();
+};
+
+// NOUVEAU: Fonction Rejeter Retrait Admin (inchangée)
+window.adminRejectWithdrawal = async (uid, idx) => {
+    if(!confirm("Êtes-vous sûr de vouloir rejeter cette demande de retrait ? Le client recevra une notification.")) return;
+
+    const snap = await getDoc(doc(db,"users",uid));
+    let userData = snap.data();
+    let req = userData.withdrawRequests[idx];
+
+    req.status = "rejeté";
+
+    userData.notifications.push({date: new Date().toISOString(), message: `Désolé, votre demande de retrait de ${req.amount} FCFA a été rejetée.`, type:'error'});
+
+    await updateDoc(doc(db,"users",uid), { 
+        withdrawRequests: userData.withdrawRequests,
+        notifications: userData.notifications
+    });
+    
+    alert("Retrait rejeté ! Le client a été notifié.");
+    loadAdminTable();
+};
+
+window.adminValidateAction = async (uid, idx) => {
+    const snap = await getDoc(doc(db,"users",uid));
+    let userData = snap.data();
+    let act = userData.actions[idx];
+
+    if(userData.balance < act.stake) return alert("Solde client insuffisant");
+
+    let expiry = new Date();
+    if(act.time === "7 Jours") expiry.setDate(expiry.getDate() + 7);
+    else if(act.time === "16 Jours") expiry.setDate(expiry.getDate() + 16);
+    else if(act.time === "30 Jours") expiry.setDate(expiry.getDate() + 30);
+    else if(act.time === "3 Mois") expiry.setMonth(expiry.getMonth() + 3);
+    else if(act.time === "5 Mois") expiry.setMonth(expiry.getMonth() + 5);
+    else if(act.time === "6 Mois") expiry.setMonth(expiry.getMonth() + 6);
+    else if(act.time === "8 Mois") expiry.setMonth(expiry.getMonth() + 8);
+
+    userData.balance -= act.stake;
+    act.status = "validé";
+    act.expiryDate = expiry.toISOString();
+    act.isPaid = false; 
+
+    userData.history.push({date: new Date().toISOString(), type:'Action Validée', amount: -act.stake, desc: `Action ${act.name} active`});
+    userData.notifications.push({date: new Date().toISOString(), message: `Action ${act.name} validée ! Le décompte a commencé.`, type:'success'});
+
+    await updateDoc(doc(db,"users",uid), { 
+        balance: userData.balance, 
+        actions: userData.actions, 
+        history: userData.history,
+        notifications: userData.notifications
+    });
+    alert("Action validée et mise déduite !");
+    loadAdminTable();
+};
+
+window.adminPayGain = async (uid, idx) => {
+    let gain = parseInt(prompt("Montant du gain à payer au client :"));
+    if(isNaN(gain) || gain <= 0) return;
+
+    const snap = await getDoc(doc(db,"users",uid));
+    let userData = snap.data();
+    let act = userData.actions[idx];
+
+    userData.balance += gain;
+    userData.totalGenerated = (userData.totalGenerated || 0) + gain;
+    
+    act.isPaid = true; 
+    
+    userData.history.push({date: new Date().toISOString(), type:'Gain Action', amount: gain, desc: `Gain pour ${act.name}`});
+    userData.notifications.push({date: new Date().toISOString(), message: `Félicitations ! Vous avez reçu un gain de ${gain} FCFA sur votre action ${act.name}.`, type:'success'});
+
+    await updateDoc(doc(db,"users",uid), { 
+        balance: userData.balance, 
+        totalGenerated: userData.totalGenerated,
+        actions: userData.actions, 
+        history: userData.history,
+        notifications: userData.notifications
+    });
+    alert("Gain payé avec succès !");
+    loadAdminTable();
+};
+
+window.addDepositPrompt=async(uid)=>{
+  let amount=parseInt(prompt("Montant du dépôt :"));
+  if(isNaN(amount)||amount<=0) return;
+  const snap=await getDoc(doc(db,"users",uid));
+  let ud = snap.data();
+  await updateDoc(doc(db,"users",uid),{
+    balance: ud.balance + amount,
+    history: arrayUnion({date:new Date().toISOString(), type:'Dépôt', amount:amount, desc:'Admin'})
+  });
+  loadAdminTable();
+};
+
+window.requestWithdrawal=async()=>{
+  const amt=parseInt(document.getElementById("withdrawAmount").value);
+  
+  if(isNaN(amt) || amt <= 0) return;
+
+  if (amt < 1000) {
+      return showPopup("Attention", "Le montant minimum de retrait est de 1000 FCFA.", true);
+  }
+
+  const snap = await getDoc(doc(db,"users",currentUser.uid));
+  let userData = snap.data();
+
+  if (amt > userData.balance) {
+      return showPopup("Attention", "Votre solde est insuffisant pour ce retrait.", true);
+  }
+
+  await updateDoc(doc(db,"users",currentUser.uid),{
+    withdrawRequests: arrayUnion({date:new Date().toISOString(), status:"en attente", amount:amt})
+  });
+  showPopup("Succès", "Votre demande de retrait a bien été envoyée !", false);
+  document.getElementById("withdrawAmount").value = "";
+};
+
+// ===== BADGES & POPUPS NOTIFS / HISTORIQUE =====
+
+// Stockage local des compteurs "vus" (ne modifie pas Firebase)
+function getSeenCount(uid, key) {
+  return parseInt(localStorage.getItem(`bw_${uid}_${key}`) || "0");
+}
+function setSeenCount(uid, key, count) {
+  localStorage.setItem(`bw_${uid}_${key}`, count);
+}
+
+window._clientNotifications = [];
+window._clientHistory = [];
+
+window.updateBadges = () => {
+  if (!currentUser) return;
+  const uid = currentUser.uid;
+  const notifCount = window._clientNotifications.length;
+  const histCount = window._clientHistory.length;
+  const seenNotif = getSeenCount(uid, "notif");
+  const seenHist = getSeenCount(uid, "hist");
+  const unreadNotif = Math.max(0, notifCount - seenNotif);
+  const unreadHist = Math.max(0, histCount - seenHist);
+
+  const nb = document.getElementById("notifBadge");
+  const hb = document.getElementById("histBadge");
+  if (nb) { nb.textContent = unreadNotif; nb.style.display = unreadNotif > 0 ? "block" : "none"; }
+  if (hb) { hb.textContent = unreadHist; hb.style.display = unreadHist > 0 ? "block" : "none"; }
+};
+
+window.openNotifPopup = () => {
+  const list = document.getElementById("notifPopupList");
+  const data = window._clientNotifications;
+  if (!data || data.length === 0) {
+    list.innerHTML = "<i style='color:#999;'>Aucune notification.</i>";
+  } else {
+    const reversed = [...data].reverse();
+    list.innerHTML = reversed.map(n => {
+      let dateStr = new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'});
+      let typeClass = n.type === 'success' ? 'notif-success' : (n.type === 'error' ? 'notif-error' : 'notif-info');
+      return `<div class="notif-item ${typeClass}">
+        <div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${dateStr}</div>
+        <div>${n.message}</div>
+      </div>`;
+    }).join("");
+  }
+  document.getElementById("notifPopup").classList.add("show");
+  // Marquer comme vus
+  if (currentUser) setSeenCount(currentUser.uid, "notif", data.length);
+  window.updateBadges();
+};
+
+window.closeNotifPopup = () => {
+  document.getElementById("notifPopup").classList.remove("show");
+};
+
+window.openHistoryPopup = () => {
+  const list = document.getElementById("histPopupList");
+  const data = window._clientHistory;
+  if (!data || data.length === 0) {
+    list.innerHTML = "<i style='color:#999;'>Aucune transaction.</i>";
+  } else {
+    const reversed = [...data].reverse();
+    list.innerHTML = reversed.map(h => {
+      let colorClass = h.amount > 0 ? "hist-positive" : (h.amount < 0 ? "hist-negative" : "hist-neutral");
+      let sign = h.amount > 0 ? "+" : "";
+      let dateStr = new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'});
+      return `<div class="hist-item">
+        <div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${dateStr} | ${h.desc}</span></div>
+        <div class="${colorClass}">${sign}${h.amount} FCFA</div>
+      </div>`;
+    }).join("");
+  }
+  document.getElementById("histPopup").classList.add("show");
+  // Marquer comme vus
+  if (currentUser) setSeenCount(currentUser.uid, "hist", data.length);
+  window.updateBadges();
+};
+
+window.closeHistoryPopup = () => {
+  document.getElementById("histPopup").classList.remove("show");
+};
+
+// Fermer les popups en cliquant sur l'overlay
+document.getElementById("notifPopup").addEventListener("click", function(e) {
+  if (e.target === this) closeNotifPopup();
+});
+document.getElementById("histPopup").addEventListener("click", function(e) {
+  if (e.target === this) closeHistoryPopup();
+});
+
+// Tombola simple logic
+window.playTombola=async()=>{
+  const bet = parseInt(document.getElementById("tombolaBet").value);
+  const snap=await getDoc(doc(db,"users",currentUser.uid));
+  let ud = snap.data();
+  if(bet > ud.balance) return showPopup("Attention", "Solde insuffisant", true);
+  
+  let winNum = Math.floor(Math.random()*16);
+  let choice = parseInt(document.getElementById("tombolaNumber").value);
+  
+  if(choice === winNum) {
+      let gain = bet * 2;
+      await updateDoc(doc(db,"users",currentUser.uid), { balance: ud.balance + gain });
+      showPopup("Félicitations", "GAGNÉ ! Gain: " + gain + " FCFA", false);
+  } else {
+      await updateDoc(doc(db,"users",currentUser.uid), { balance: ud.balance - bet });
+      showPopup("Dommage", "PERDU ! Le numéro gagnant était le " + winNum, true);
+  }
+  setTimeout(() => location.reload(), 2000);
+};
+
+</script>
+
+<footer style="text-align:center; padding:15px; background:#f0f6ff; color:#555; font-size:14px;">
+  © 2026 BRAINY WALLET (BW). Tous droits réservés.
+</footer>
+</body>
+</html>
