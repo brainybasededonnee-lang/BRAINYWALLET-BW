@@ -1,0 +1,335 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BW - Connexion</title>
+<style>
+:root {
+    --primary-color: #007bff;
+    --primary-hover: #0056b3;
+    --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --text-light: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --input-bg: rgba(255, 255, 255, 0.08);
+}
+
+body { 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    background: var(--bg-gradient); 
+    margin: 0; 
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+}
+
+.container { 
+    width: 90%; 
+    max-width: 450px; 
+    background: var(--glass-bg); 
+    padding: 35px 25px; 
+    border-radius: 20px; 
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+#register-section { max-width: 550px; }
+.hidden { display: none !important; }
+
+h2 { 
+    text-align: center; 
+    color: var(--text-light); 
+    font-size: 28px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.input-group { display: flex; flex-direction: column; gap: 0; }
+@media (min-width: 480px) {
+    .input-group { flex-direction: row; gap: 12px; }
+    .input-group > input { flex: 1; }
+}
+
+input { 
+    width: 100%; 
+    padding: 15px; 
+    margin: 8px 0; 
+    border-radius: 12px; 
+    border: 1px solid var(--glass-border); 
+    background: var(--input-bg);
+    color: var(--text-light);
+    box-sizing: border-box; 
+    font-size: 16px; 
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input::placeholder { color: var(--text-muted); }
+input:focus { 
+    border-color: var(--primary-color); 
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+}
+
+button { 
+    width: 100%; 
+    padding: 16px; 
+    margin: 15px 0; 
+    border-radius: 12px; 
+    border: none;
+    background: var(--primary-color); 
+    color: white; 
+    font-size: 16px;
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: background 0.3s, transform 0.1s;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:hover { background: var(--primary-hover); }
+button:active { transform: scale(0.98); }
+
+.message { text-align: center; font-weight: 500; margin-top: 10px; min-height: 20px; color: #ffeb3b; }
+.bottom-text { text-align: center; margin-top: 15px; font-size: 14px; color: var(--text-muted); }
+.bottom-text a { color: #66b0ff; text-decoration: none; font-weight: bold; transition: color 0.3s; }
+.bottom-text a:hover { color: white; text-decoration: underline; }
+
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: rgba(20, 30, 40, 0.95); border: 1px solid var(--glass-border); padding: 30px; border-radius: 16px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(-20px); transition: transform 0.3s ease; color: var(--text-light); }
+.popup-overlay.show .popup-content { transform: translateY(0); }
+#popupTitle { margin-top: 0; font-size: 22px; }
+#popupMessage { color: var(--text-muted); line-height: 1.5; margin-bottom: 25px; }
+.popup-btn { background: var(--primary-color); color: white; border: none; padding: 14px 20px; border-radius: 10px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; font-weight: bold; }
+</style>
+
+<script>
+window.login = function() {
+    const msg = document.getElementById("login-message");
+    if(msg) msg.textContent = "Initialisation... Patientez une seconde.";
+};
+window.register = function() {
+    const msg = document.getElementById("register-message");
+    if(msg) msg.textContent = "Initialisation... Patientez une seconde.";
+};
+</script>
+</head>
+<body>
+
+<div id="customPopup" class="popup-overlay">
+  <div class="popup-content">
+      <h3 id="popupTitle">Notification</h3>
+      <p id="popupMessage">Message</p>
+      <button type="button" class="popup-btn" onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<div class="container" id="login-section">
+    <h2>Connexion</h2>
+    <input id="login-email" type="email" placeholder="Email" autocomplete="email">
+    <input id="login-password" type="password" placeholder="Mot de passe" autocomplete="current-password">
+    <button type="button" onclick="login()">Se connecter</button>
+    <p class="message" id="login-message"></p>
+    <p class="bottom-text">Pas encore membre ? <a href="#" onclick="showRegister(); return false;">S'inscrire</a></p>
+</div>
+
+<div class="container hidden" id="register-section">
+    <h2>Inscription</h2>
+    <div class="input-group">
+        <input id="lastName" placeholder="Nom" autocomplete="family-name">
+        <input id="firstName" placeholder="Prénom" autocomplete="given-name">
+    </div>
+    <input id="phone" type="tel" placeholder="Téléphone" autocomplete="tel">
+    <input id="email" type="email" placeholder="Email" autocomplete="email">
+    <input id="address" placeholder="Adresse" autocomplete="street-address">
+    <input id="paymentNumber" type="tel" placeholder="Numéro Flooz ou Mixx">
+    <input id="inviteCode" placeholder="Code d'invitation">
+    <input id="password" type="password" placeholder="Mot de passe" autocomplete="new-password">
+    <input id="confirmPassword" type="password" placeholder="Confirmer le mot de passe" autocomplete="new-password">
+    <button type="button" onclick="register()">S'inscrire</button>
+    <p class="message" id="register-message"></p>
+    <p class="bottom-text">Déjà membre ? <a href="#" onclick="showLogin(); return false;">Se connecter</a></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI",
+  authDomain: "brainy-wallet.firebaseapp.com",
+  projectId: "brainy-wallet",
+  storageBucket: "brainy-wallet.firebasestorage.app",
+  messagingSenderId: "554152129336",
+  appId: "1:554152129336:web:997fe6b439d6ccac0707cd"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Sécurisation du listener d'état pour intercepter d'éventuelles pannes de réseau mobile
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        try {
+            const snap = await getDoc(doc(db, "users", user.uid));
+            if(snap.exists()) {
+                if (snap.data().isAdmin) window.location.href = "admin.html";
+                else window.location.href = "index.html";
+            } else {
+                showPopup("Erreur de compte", "Données utilisateur introuvables en base de données.", true);
+            }
+        } catch(err) {
+            showPopup("Erreur Réseau", "Impossible de charger votre profil. Vérifiez votre connexion.", true);
+        }
+    }
+});
+
+window.showPopup = (title, message, isError = false) => {
+    const popup = document.getElementById("customPopup");
+    const titleEl = document.getElementById("popupTitle");
+    titleEl.textContent = title;
+    titleEl.style.color = isError ? "#ff4d4d" : "#00e676"; 
+    document.getElementById("popupMessage").textContent = message;
+    popup.classList.add("show");
+};
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+window.showLogin = () => { document.getElementById("register-section").classList.add("hidden"); document.getElementById("login-section").classList.remove("hidden"); };
+window.showRegister = () => { document.getElementById("login-section").classList.add("hidden"); document.getElementById("register-section").classList.remove("hidden"); };
+
+const translateFirebaseError = (error) => {
+    switch(error.code) {
+        case 'auth/email-already-in-use': return "Cette adresse e-mail est déjà utilisée.";
+        case 'auth/invalid-email': return "L'adresse e-mail n'est pas valide.";
+        case 'auth/weak-password': return "Le mot de passe est trop faible.";
+        case 'auth/user-not-found': return "Aucun compte trouvé.";
+        case 'auth/wrong-password': return "Mot de passe incorrect.";
+        case 'auth/invalid-credential': return "L'e-mail ou le mot de passe est incorrect.";
+        case 'auth/too-many-requests': return "Trop de tentatives. Patientez.";
+        default: return "Une erreur s'est produite. Veuillez réessayer."; 
+    }
+};
+
+window.register = async () => {
+    const msg = document.getElementById("register-message");
+    msg.textContent = "Création...";
+    try {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        const inviteCodeInput = document.getElementById("inviteCode").value.trim();
+        const phone = document.getElementById("phone").value;
+        const firstName = document.getElementById("firstName").value.trim();
+        const lastName = document.getElementById("lastName").value.trim();
+        
+        if (!firstName || !lastName) { msg.textContent=""; return showPopup("Erreur", "Veuillez renseigner nom et prénom.", true); }
+        if(!email || !password) { msg.textContent=""; throw {code: "auth/missing-email"}; }
+        if (password !== confirmPassword) { msg.textContent=""; return showPopup("Erreur", "Mots de passe différents.", true); }
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if(!emailRegex.test(email)) { msg.textContent=""; return showPopup("Erreur d'email", "E-mail invalide.", true); }
+
+        const fullName = `${firstName} ${lastName}`;
+        let baseLetters = fullName.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
+        if(baseLetters.length < 2) baseLetters = "BW";
+        let baseNumbers = phone.replace(/[^0-9]/g, '').substring(0, 2);
+        if(baseNumbers.length < 2) baseNumbers = "00";
+        
+        let finalCode = baseLetters + baseNumbers;
+        let isUnique = false; let counter = 0;
+        
+        while(!isUnique) {
+            let q = query(collection(db, "users"), where("myAffiliateCode", "==", finalCode));
+            let querySnapshot = await getDocs(q);
+            if(querySnapshot.empty) isUnique = true;
+            else {
+                counter++;
+                let newNum = (parseInt(baseNumbers) + counter) % 100;
+                finalCode = baseLetters + (newNum < 10 ? "0" + newNum : newNum.toString());
+            }
+        }
+
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db,"users",userCred.user.uid),{
+            fullName: fullName, phone: phone, email:email,
+            address:document.getElementById("address").value,
+            paymentNumber:document.getElementById("paymentNumber").value,
+            inviteCode: inviteCodeInput, myAffiliateCode: finalCode, referredBy: inviteCodeInput,
+            affiliatesCount: 0, totalAffiliateBonus: 0, hasMadeFirstDeposit: false,
+            balance:0, totalGenerated:0, totalWithdrawn:0,
+            withdrawRequests:[], actions:[], history:[], notifications:[], createdAt:new Date()
+        });
+
+        msg.textContent=""; showPopup("Succès !", "Votre compte a été créé avec succès.", false);
+        setTimeout(() => showLogin(), 2000);
+    } catch(e) { msg.textContent=""; showPopup("Erreur d'inscription", translateFirebaseError(e), true); }
+};
+
+window.login = async () => {
+    const msg = document.getElementById("login-message");
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
+    const now = new Date().getTime();
+    let lockoutUntil = null;
+    
+    // PROTECTION EXCLUSIVE MOBILE : try...catch pour empêcher le crash si le mode privé bloque le stockage
+    try {
+        lockoutUntil = localStorage.getItem('bw_lockout_until');
+    } catch(storageError) {
+        console.warn("Stockage local restreint par le navigateur.");
+    }
+
+    if (lockoutUntil && now < parseInt(lockoutUntil)) {
+        let remainingMins = Math.ceil((parseInt(lockoutUntil) - now) / 60000);
+        return showPopup("Accès bloqué", `Trop de tentatives échouées. Veuillez réessayer dans ${remainingMins} minute(s).`, true);
+    }
+
+    msg.textContent = "Connexion...";
+    try {
+        if (!email || !password) throw {code: "auth/missing-email"};
+        await signInWithEmailAndPassword(auth, email, password);
+        
+        try {
+            localStorage.removeItem('bw_failed_attempts');
+            localStorage.removeItem('bw_lockout_until');
+        } catch(e) {}
+        
+        msg.textContent = "";
+    } catch(e) { 
+        msg.textContent = "";
+        if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+            let attempts = 0;
+            try {
+                attempts = parseInt(localStorage.getItem('bw_failed_attempts') || '0') + 1;
+                localStorage.setItem('bw_failed_attempts', attempts);
+                if (attempts >= 5) {
+                    localStorage.setItem('bw_lockout_until', now + (5 * 60 * 1000)); 
+                    showPopup("Accès bloqué", "5 tentatives échouées. Bloqué pour 5 minutes.", true);
+                } else {
+                    showPopup("Erreur", `Identifiants incorrects. Tentatives restantes : ${5 - attempts}`, true);
+                }
+            } catch(storageErr) {
+                // Alternative sécurisée si le localStorage mobile refuse d'écrire
+                showPopup("Erreur", "Identifiants incorrects. Vérifiez vos informations.", true);
+            }
+        } else {
+            showPopup("Erreur de connexion", translateFirebaseError(e), true); 
+        }
+    }
+};
+</script>
+</body>
+</html>
