@@ -171,7 +171,9 @@ button:disabled { background: #aaa; cursor: not-allowed; }
   <div class="trading-panel">
     <h3 style="color:#007bff; margin-top:0; border-bottom:1px solid #ccc; padding-bottom:5px;">Trading en Temps Réel</h3>
     
-    <canvas id="tradingChart" height="100"></canvas>
+    <div style="position:relative; width:100%; height:120px;">
+        <canvas id="tradingChart"></canvas>
+    </div>
     <div id="currentValueDisplay" class="trading-val">0</div>
 
     <div class="trading-inputs-grid">
@@ -203,11 +205,14 @@ button:disabled { background: #aaa; cursor: not-allowed; }
     <label style="font-size:clamp(11px, 3vw, 12px); font-weight:bold; color:#555; display:block; margin-top:5px;">Montant de la mise (FCFA)</label>
     <input type="number" id="tradeStake" placeholder="Montant à investir">
 
-    <button id="btnPlaceTrade" onclick="placeTrade()" style="background:#17a2b8; margin-top:10px;">Investir et Valider (Gain +30%)</button>
+    <button id="btnPlaceTrade" style="background:#17a2b8; margin-top:10px;">Investir et Valider (Gain +30%)</button>
   </div>
 
   <h4 style="text-align:left; color:#17a2b8; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:20px;">Mes Trades en cours</h4>
   <div id="activeTradesList" class="scroll-box"><i>Aucun trade en cours...</i></div>
+  
+  <br>
+  <button onclick="window.location.href='index.html'" style="background:#6c757d; font-size: 14px; padding: 12px; margin-top:10px;">Retour à l'accueil</button>
 
 </div>
 
@@ -224,7 +229,6 @@ let currentChartValue = 0;
 let tradeTimers = [];
 window._clientNotifications = []; window._clientHistory = [];
 
-// Phrases de motivation aléatoires
 const motivations = [
     "Continue, la prochaine sera peut-être la bonne !",
     "Tu peux encore gagner gros !",
@@ -257,6 +261,8 @@ let tradingChart = new Chart(ctx, {
         }]
     },
     options: {
+        responsive: true,
+        maintainAspectRatio: false,
         animation: false,
         plugins: { legend: { display: false } },
         scales: { 
@@ -314,13 +320,21 @@ onAuthStateChanged(auth, async (user) => {
 
             for (let i = 0; i < trades.length; i++) {
                 if (trades[i].status === "en cours" && new Date(trades[i].expiryDate).getTime() <= now) {
-                    // Simulation de la valeur au moment de l'expiration hors-ligne
+                    // Calcul équilibré pour les trades expirés hors-ligne
                     let finalValue = Math.floor(Math.random() * 41) - 20; 
                     let isWin = false;
                     
                     if (trades[i].prediction === 'above' && finalValue > trades[i].target) isWin = true;
                     else if (trades[i].prediction === 'below' && finalValue < trades[i].target) isWin = true;
                     else if (trades[i].prediction === 'equal' && finalValue === trades[i].target) isWin = true;
+
+                    // Anti-Exploit hors-ligne pour la rentabilité (45% de victoire max)
+                    if (isWin && Math.random() > 0.45) {
+                        isWin = false;
+                        if (trades[i].prediction === 'above') finalValue = Math.floor(Math.random() * (trades[i].target + 20 + 1)) - 20;
+                        else if (trades[i].prediction === 'below') finalValue = Math.floor(Math.random() * (20 - trades[i].target + 1)) + trades[i].target;
+                    }
+                    if(finalValue > 20) finalValue = 20; if(finalValue < -20) finalValue = -20;
 
                     trades[i].status = isWin ? "gagné" : "perdu";
                     trades[i].closeValue = finalValue;
@@ -331,7 +345,6 @@ onAuthStateChanged(auth, async (user) => {
                     let histDesc = `Fin de période (Hors ligne). Courbe: ${finalValue}. ${isWin ? 'Prédiction correcte.' : 'Prédiction incorrecte. Mise perdue.'}`;
                     let notifMessage = `Fin de période ! La courbe s'est arrêtée à ${finalValue}. Votre prédiction était ${isWin ? 'correcte. Vous gagnez '+profit+' FCFA.' : 'fausse. Vous perdez votre mise de '+trades[i].stake+' FCFA.'}`;
                     
-                    // Ajout du message de motivation aléatoire
                     let randomQuote = motivations[Math.floor(Math.random() * motivations.length)];
                     notifMessage += `\n\n💡 ${randomQuote}`;
 
@@ -358,9 +371,11 @@ onAuthStateChanged(auth, async (user) => {
                 document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
                 
                 if (offlineResolves.length > 0) {
-                    let finalTitle = offlineResolves.length > 1 ? "Résultats de vos trades en attente" : (offlineResolves[0].isWin ? "Résultat du Trading : GAGNÉ 🎉" : "Résultat du Trading : PERDU ❌");
+                    let isAllLoss = true;
+                    offlineResolves.forEach(o => { if(o.isWin) isAllLoss = false; });
+                    let finalTitle = offlineResolves.length > 1 ? "Résultats de vos trades" : (offlineResolves[0].isWin ? "Résultat du Trading : GAGNÉ 🎉" : "Résultat du Trading : PERDU ❌");
                     let finalMsg = offlineResolves.map(o => o.notifMessage).join('\n\n---\n\n');
-                    showPopup(finalTitle, finalMsg, offlineResolves.every(o => !o.isWin));
+                    showPopup(finalTitle, finalMsg, isAllLoss);
                 }
             }
             
@@ -376,7 +391,6 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // POPUPS ET UTILS GLOBAUX
-// Modification pour utiliser innerText afin de supporter les retours à la ligne
 window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").innerText=msg; document.getElementById("customPopup").classList.add("show"); };
 window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
 
@@ -406,10 +420,11 @@ window.openHistoryPopup = () => {
 window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
 
 // ==========================================
-// 3. LOGIQUE METIER DU TRADING
+// 3. LOGIQUE METIER DU TRADING & ANTI-EXPLOIT
 // ==========================================
 
-window.placeTrade = async () => {
+// Sécurisation de l'événement clic pour assurer la compatibilité Webview/Mobile
+document.getElementById('btnPlaceTrade').addEventListener('click', async function() {
     if(!currentUser) return;
     const target = parseInt(document.getElementById("tradeTarget").value);
     const duration = parseInt(document.getElementById("tradeDuration").value);
@@ -421,6 +436,8 @@ window.placeTrade = async () => {
 
     const btn = document.getElementById("btnPlaceTrade");
     btn.disabled = true;
+    let oldText = btn.textContent;
+    btn.textContent = "Traitement en cours...";
 
     try {
         const userRef = doc(db, "users", currentUser.uid);
@@ -429,13 +446,14 @@ window.placeTrade = async () => {
 
         if (userData.balance < stake) {
             btn.disabled = false;
+            btn.textContent = oldText;
             return showPopup("Attention", "Votre solde est insuffisant pour miser cette somme.", true);
         }
 
         let expiry = new Date();
         expiry.setMinutes(expiry.getMinutes() + duration);
 
-        let tradeId = "TRD_" + Date.now();
+        let tradeId = "TRD_" + Date.now(); // ID Unique pour éviter les bugs DOM
         let predictionText = prediction === 'above' ? 'Au-dessus de' : (prediction === 'below' ? 'En dessous de' : 'Égal à');
 
         const newTrade = {
@@ -460,7 +478,7 @@ window.placeTrade = async () => {
             notifications: arrayUnion(newNotif)
         });
 
-        showPopup("Trade Validé", "La mise a été déduite de votre solde. Le système analysera automatiquement les résultats à la fin du chrono, même si vous quittez la page !", false);
+        showPopup("Trade Validé", "La mise a été déduite de votre solde. L'analyse se fera automatiquement à la fin du chrono !", false);
         
         document.getElementById("balanceAmount").textContent = updatedBalance + " FCFA";
         userData.balance = updatedBalance;
@@ -476,16 +494,19 @@ window.placeTrade = async () => {
         checkAndRenderTrades(userData);
 
     } catch (e) {
-        showPopup("Erreur", "Impossible de valider le trade.", true);
+        showPopup("Erreur", "Problème de connexion au serveur. Réessayez.", true);
     }
     
     btn.disabled = false;
+    btn.textContent = oldText;
     document.getElementById("tradeStake").value = "";
-};
+});
 
 async function checkAndRenderTrades(userData) {
     const list = document.getElementById("activeTradesList");
-    tradeTimers.forEach(clearInterval); 
+    // Nettoyage complet des anciens timers pour éviter les conflits
+    tradeTimers.forEach(t => clearInterval(t.interval)); 
+    tradeTimers = [];
     
     let trades = userData.trades || [];
     let activeTrades = trades.filter(t => t.status === "en cours");
@@ -495,29 +516,30 @@ async function checkAndRenderTrades(userData) {
         return;
     }
 
-    list.innerHTML = activeTrades.map((t, index) => {
+    // L'ID du trade est utilisé pour le span du timer afin d'éviter tout bug d'index mobile
+    list.innerHTML = activeTrades.map(t => {
         let predictionText = t.prediction === 'above' ? 'Au-dessus de' : (t.prediction === 'below' ? 'En dessous de' : 'Égal à');
         return `<div style="padding: 10px; border-bottom: 1px dashed #ccc; background: white; border-radius:5px; margin-bottom:5px; border-left: 3px solid #17a2b8;">
             <strong style="color:#007bff;">Mise : ${t.stake} FCFA</strong><br>
             <span style="font-size:12px; color:#555;">Prédiction : <b>${predictionText} ${t.target}</b></span>
-            <span class="timer" id="trade-timer-${index}">Calcul du temps...</span>
+            <span class="timer" id="trade-timer-${t.id}">Calcul du temps...</span>
         </div>`;
     }).join("");
 
-    activeTrades.forEach((t, index) => {
-        startTradeTimer(t, index, userData);
+    activeTrades.forEach(t => {
+        startTradeTimer(t, userData);
     });
 }
 
-function startTradeTimer(trade, index, userData) {
+function startTradeTimer(trade, userData) {
     const targetTime = new Date(trade.expiryDate).getTime();
     
     const timerFunc = setInterval(async () => {
         const now = new Date().getTime();
         const diff = targetTime - now;
-        const el = document.getElementById(`trade-timer-${index}`);
+        const el = document.getElementById(`trade-timer-${trade.id}`);
         
-        if(!el) return clearInterval(timerFunc);
+        if(!el) return; // Si la page a été rechargée et que le DOM n'est pas prêt
 
         if (diff <= 0) {
             clearInterval(timerFunc);
@@ -537,10 +559,10 @@ function startTradeTimer(trade, index, userData) {
         }
     }, 1000);
     
-    tradeTimers.push(timerFunc);
+    tradeTimers.push({ id: trade.id, interval: timerFunc });
 }
 
-// RÉSOUDRE LE RÉSULTAT DU TRADE
+// RÉSOUDRE LE RÉSULTAT DU TRADE & ANTI-EXPLOIT GARANTI
 async function resolveTrade(trade, userData) {
     const userRef = doc(db, "users", currentUser.uid);
     const snap = await getDoc(userRef);
@@ -552,11 +574,39 @@ async function resolveTrade(trade, userData) {
     if(tradeIndex === -1) return;
 
     let finalValue = currentChartValue;
-    let isWin = false;
+    
+    // --- DÉBUT DE L'ANTI-EXPLOIT ---
+    // On analyse la "facilité" de la prédiction de l'utilisateur
+    let isEasyBet = false;
+    if (trade.prediction === 'below' && trade.target >= 10) isEasyBet = true; // Parier "en dessous de 15" est trop facile
+    if (trade.prediction === 'above' && trade.target <= -10) isEasyBet = true; // Parier "au dessus de -15" est trop facile
 
+    // Le taux de victoire naturel de la plateforme doit tourner autour de 45% pour absorber les 30% de bénéfice reversé.
+    // Si le pari est jugé "abusif / facile", on chute drastiquement la chance de victoire.
+    let winProbability = isEasyBet ? 0.15 : 0.45; 
+    let willWin = Math.random() < winProbability;
+
+    // On force secrètement la valeur de fin de la courbe pour qu'elle corresponde mathématiquement au résultat décidé
+    if (willWin) {
+        if (trade.prediction === 'above') finalValue = Math.floor(Math.random() * (20 - trade.target)) + trade.target + 1; 
+        else if (trade.prediction === 'below') finalValue = Math.floor(Math.random() * (trade.target + 20)) - 20;
+        else finalValue = trade.target;
+    } else {
+        if (trade.prediction === 'above') finalValue = Math.floor(Math.random() * (trade.target + 20 + 1)) - 20;
+        else if (trade.prediction === 'below') finalValue = Math.floor(Math.random() * (20 - trade.target + 1)) + trade.target;
+        else finalValue = trade.target + (Math.random() > 0.5 ? 2 : -2);
+    }
+
+    // Protection pour l'affichage visuel (entre -20 et 20)
+    if(finalValue > 20) finalValue = 20;
+    if(finalValue < -20) finalValue = -20;
+    
+    // Vérification finale mathématique basée sur le nouveau finalValue
+    let isWin = false;
     if (trade.prediction === 'above' && finalValue > trade.target) isWin = true;
     else if (trade.prediction === 'below' && finalValue < trade.target) isWin = true;
     else if (trade.prediction === 'equal' && finalValue === trade.target) isWin = true;
+    // --- FIN DE L'ANTI-EXPLOIT ---
 
     trades[tradeIndex].status = isWin ? "gagné" : "perdu";
     trades[tradeIndex].closeValue = finalValue;
@@ -571,7 +621,7 @@ async function resolveTrade(trade, userData) {
     let notifType = '';
 
     if (isWin) {
-        profit = Math.floor(trade.stake * 1.3);
+        profit = Math.floor(trade.stake * 1.3); // Gain = Mise + 30%
         newBalance += profit;
         histDesc += `Prédiction correcte.`;
         histType = 'Gain Trading';
@@ -586,7 +636,6 @@ async function resolveTrade(trade, userData) {
         notifType = 'error';
     }
 
-    // Ajout d'une citation aléatoire
     let randomQuote = motivations[Math.floor(Math.random() * motivations.length)];
     notifMessage += `\n\n💡 ${randomQuote}`;
 
