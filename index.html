@@ -1,237 +1,139 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BW - Accueil</title>
-<style>
-/* --- STYLES GLOBAUX --- */
-body{ font-family: Arial,sans-serif; background:#f0f6ff; margin:0; }
-.container{ width:90%; max-width:700px; margin:30px auto; background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
-input, button, select{ width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; font-size: 14px; }
-button{ background:#007bff; color:white; font-weight:bold; cursor:pointer; transition: background 0.3s; }
-button:hover { background: #0056b3; }
-.message{text-align:center;font-weight:bold;margin-top:10px;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brainy Wallet - Application</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- RESET ET STRUCTURE DE BASE --- */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Supprime le flash bleu au clic sur mobile */
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Empêche le scroll sur la page principale */
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f6ff;
+        }
 
-/* --- WALLET CARD --- */
-.wallet-card{ background:linear-gradient(135deg,#0a7a18,#0f9d2f); color:white; border-radius:18px; padding:20px; box-shadow: 0 4px 15px rgba(10,122,24,0.3); }
-.wallet-header{ display:flex; justify-content:space-between; font-weight:bold; align-items: center; }
-.wallet-main{ margin:20px 0; }
-.amount{ font-size:28px; font-weight:bold; }
-.label{ font-size:14px; opacity:0.9; }
-.wallet-footer{ display:flex; gap:10px; }
-.box{ flex:1; background:rgba(255,255,255,0.15); border-radius:12px; padding:10px; text-align:center; }
-.box-title{font-size:12px;} .box-amount{font-size:16px;font-weight:bold;margin-top:5px;}
+        /* --- ZONE DE CONTENU (IFRAME) --- */
+        #app-frame {
+            width: 100%;
+            /* La hauteur prend tout l'écran moins la hauteur de la barre de navigation (65px) */
+            height: calc(100% - 65px);
+            border: none;
+            display: block;
+            background-color: #f0f6ff;
+        }
 
-/* --- SECTIONS (Annonces, Scroll-box) --- */
-.announcements-section { background: #e9ecef; border-left: 4px solid #007bff; border-radius: 8px; padding: 15px; margin-top: 25px; margin-bottom: 25px; }
-.scroll-box { max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: left; font-size: 13px; margin-bottom: 15px; }
-.hist-item { border-bottom: 1px dashed #ccc; padding: 8px 0; display:flex; justify-content: space-between; align-items: center;}
-.hist-positive { color: green; font-weight: bold; } .hist-negative { color: red; font-weight: bold; } .hist-neutral { color: #555; font-weight: bold; }
-.notif-item { padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height:1.4; }
-.notif-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.notif-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-.notif-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-.timer { font-size: 12px; color: #d9534f; font-weight: bold; display: block; margin-top: 5px; }
+        /* --- BARRE DE NAVIGATION EN BAS --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px; /* Hauteur de base */
+            background: #ffffff;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 9999;
+            /* Padding dynamique pour les écrans sans bordures (ex: iPhone X et +) */
+            padding-bottom: env(safe-area-inset-bottom); 
+        }
 
-/* --- POPUPS --- */
-.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
-.popup-overlay.show { opacity: 1; visibility: visible; }
-.popup-content { background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; box-sizing: border-box; }
-.popup-overlay.show .popup-content { transform: translateY(0); }
-.popup-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; }
+        /* --- BOUTONS DE NAVIGATION --- */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #8a92b2;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            transition: all 0.3s ease;
+            user-select: none; /* Empêche la sélection du texte au double clic */
+        }
 
-/* ========================================================================= */
-/* --- DESIGN RESPONSIVE (Mobiles & Tablettes) --- */
-/* ========================================================================= */
-@media (max-width: 600px) {
-    .container { width: 95%; margin: 15px auto; padding: 15px; }
-    .amount { font-size: 24px; }
-    .wallet-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .wallet-footer { flex-direction: column; gap: 8px; }
-    .box-amount { font-size: 14px; }
-    input, button, select { font-size: 16px; padding: 14px; /* Plus large pour les doigts sur mobile */ }
-    h4 { font-size: 15px; }
-    .scroll-box { font-size: 12px; }
-    .hist-item { flex-direction: column; align-items: flex-start; gap: 5px; }
-    .hist-item > div:last-child { align-self: flex-end; }
-}
-</style>
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 4px;
+            transition: transform 0.2s ease, color 0.3s ease;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* --- ÉTAT ACTIF (Page sélectionnée) --- */
+        .nav-item.active {
+            color: #007bff;
+        }
+
+        .nav-item.active i {
+            transform: translateY(-2px) scale(1.1); /* Petit effet de soulèvement */
+            color: #007bff;
+        }
+
+    </style>
 </head>
 <body>
 
-<div id="customPopup" class="popup-overlay"><div class="popup-content"><h3 id="popupTitle">Notification</h3><p id="popupMessage">Message</p><button class="popup-btn" onclick="closePopup()">OK</button></div></div>
-<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#e0a800; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">🔔 Notifications Récentes</strong><button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="notifPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
-<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">📜 Historique des Transactions</strong><button onclick="closeHistoryPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="histPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
+    <iframe id="app-frame" src="index.html"></iframe>
 
-<div class="container hidden" id="dashboard-section">
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="navigate('index.html', this)">
+            <i class="fa-solid fa-house"></i>
+            <span>Accueil</span>
+        </div>
+        
+        <div class="nav-item" onclick="navigate('action.html', this)">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Actions</span>
+        </div>
+        
+        <div class="nav-item" onclick="navigate('trading.html', this)">
+            <i class="fa-solid fa-chart-candlestick"></i>
+            <span>Trading</span>
+        </div>
+        
+        <div class="nav-item" onclick="navigate('crash.html', this)">
+            <i class="fa-solid fa-rocket"></i>
+            <span>Crash</span>
+        </div>
+        
+        <div class="nav-item" onclick="navigate('jeu.html', this)">
+            <i class="fa-solid fa-gift"></i>
+            <span>Tombola</span>
+        </div>
+    </nav>
 
-  <div class="wallet-card">
-    <div class="wallet-header">
-      <span id="clientName">Chargement...</span>
-      <div style="display:flex; gap:8px;">
-        <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
-          🔔 Notifs <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
-        </button>
-        <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
-          📜 Historique <span id="histBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
-        </button>
-      </div>
-    </div>
-    
-    <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-top: 15px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
-      <div style="flex:1;"><div style="font-size:11px; opacity:0.9;">Code Affilié</div><strong id="myAffiliateCodeDisplay" style="font-size:16px; letter-spacing: 1px; color:#fff;">---</strong></div>
-      <div style="text-align:center; flex:1; border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2); padding: 0 5px;"><div style="font-size:11px; opacity:0.9;">Gains Parrainage (3%)</div><strong id="myAffiliateBonusDisplay" style="font-size:16px; color:#fff;">0 FCFA</strong></div>
-      <div style="text-align:right; flex:1;"><div style="font-size:11px; opacity:0.9;">Total Affiliés</div><strong id="myAffiliatesCountDisplay" style="font-size:16px; color:#fff;">0</strong></div>
-    </div>
-    
-    <div class="wallet-main"><div class="amount" id="balanceAmount">0 FCFA</div><div class="label">Solde disponible</div></div>
-    
-    <div class="wallet-footer">
-      <div class="box"><div class="box-title">Solde total généré</div><div class="box-amount" id="totalGenerated">0 FCFA</div></div>
-      <div class="box"><div class="box-title">Payé</div><div class="box-amount" id="totalWithdrawn">0 FCFA</div></div>
-    </div>
-  </div>
-
-  <br>
-  <input type="number" id="withdrawAmount" placeholder="Montant retrait à demander">
-  <button onclick="requestWithdrawal()">Demande de retrait</button>
-
-  <div class="announcements-section">
-      <h4 style="margin-top: 0; color: #007bff; font-size: 16px;">📢 Annonces de l'Administration</h4>
-      <div id="announcementsDisplay" style="font-size: 13px; color: #444; line-height: 1.5;">
-          <i>Bienvenue sur votre espace sécurisé. Restez à l'écoute pour les prochaines annonces.</i>
-      </div>
-  </div>
-
-  <h4 style="text-align:left; color:#28a745; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:30px;">Mes actions en cours</h4>
-  <div id="clientActionsList" class="scroll-box"><i>Chargement...</i></div>
-
-  <h4 style="text-align:left; color:#17a2b8; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:30px;">Trading en cours</h4>
-  <div id="clientTradesList" class="scroll-box"><i>Aucun trade en cours...</i></div>
-
-  <br>
-  <button onclick="logout()" style="background:#dc3545; margin-top:20px;">Se déconnecter</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
-
-let currentUser = null;
-let timersIntervals = [];
-window._clientNotifications = []; window._clientHistory = [];
-
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUser = user;
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if(snap.exists()) {
-            const userData = snap.data();
-            if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+    <script>
+        function navigate(page, element) {
+            // 1. Changer la source de l'iframe
+            document.getElementById('app-frame').src = page;
             
-            document.getElementById("dashboard-section").classList.remove("hidden");
-            document.getElementById("clientName").textContent = userData.fullName;
-            document.getElementById("myAffiliateCodeDisplay").textContent = userData.myAffiliateCode || "---";
-            document.getElementById("myAffiliatesCountDisplay").textContent = userData.affiliatesCount || 0;
-            document.getElementById("myAffiliateBonusDisplay").textContent = (userData.totalAffiliateBonus || 0) + " FCFA";
-            document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
-            document.getElementById("totalGenerated").textContent = (userData.totalGenerated || 0) + " FCFA";
-            document.getElementById("totalWithdrawn").textContent = (userData.totalWithdrawn || 0) + " FCFA";
-
-            window._clientNotifications = userData.notifications || [];
-            window._clientHistory = userData.history || [];
-            window.updateBadges();
+            // 2. Retirer la classe 'active' de tous les boutons
+            const items = document.querySelectorAll('.nav-item');
+            items.forEach(item => {
+                item.classList.remove('active');
+            });
             
-            window.renderClientActions(userData.actions || []);
-            window.renderClientTrades(userData.trades || []);
+            // 3. Ajouter la classe 'active' au bouton cliqué
+            element.classList.add('active');
         }
-    } else {
-        window.location.href = "login.html";
-    }
-});
+    </script>
 
-window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
-window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").textContent=msg; document.getElementById("customPopup").classList.add("show"); };
-window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
-
-function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser.uid}_${k}`) || "0"); }
-function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser.uid}_${k}`, c); }
-
-window.updateBadges = () => {
-  const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif"));
-  const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
-  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
-  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "block" : "none"; }
-  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "block" : "none"; }
-};
-
-window.openNotifPopup = () => {
-  const l = document.getElementById("notifPopupList");
-  l.innerHTML = window._clientNotifications.length === 0 ? "<i>Aucune notification.</i>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
-  document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
-};
-window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
-
-window.openHistoryPopup = () => {
-  const l = document.getElementById("histPopupList");
-  l.innerHTML = window._clientHistory.length === 0 ? "<i>Aucune transaction.</i>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
-  document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
-};
-window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
-
-window.requestWithdrawal=async()=>{
-  const amt=parseInt(document.getElementById("withdrawAmount").value);
-  if(isNaN(amt) || amt <= 0) return;
-  if(amt < 1000) return showPopup("Attention", "Le montant minimum de retrait est de 1000 FCFA.", true);
-  const snap = await getDoc(doc(db,"users",currentUser.uid));
-  if (amt > snap.data().balance) return showPopup("Attention", "Votre solde est insuffisant.", true);
-  await updateDoc(doc(db,"users",currentUser.uid),{ withdrawRequests: arrayUnion({date:new Date().toISOString(), status:"en attente", amount:amt}) });
-  showPopup("Succès", "Votre demande de retrait a bien été envoyée !", false); document.getElementById("withdrawAmount").value = "";
-};
-
-window.renderClientActions = (actionsArray) => {
-  const list = document.getElementById("clientActionsList"); timersIntervals.forEach(clearInterval); 
-  if(actionsArray.length === 0) return list.innerHTML = "<i>Aucune action.</i>";
-  list.innerHTML = actionsArray.map((act, i) => {
-    let col = act.status === "validé" ? "green" : (act.status === "rejeté" ? "red" : "orange");
-    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;"><strong>${act.name}</strong> - ${act.stake} FCFA<span style="float:right; color:${col}; font-weight:bold;">${act.status}</span>${act.status==="validé"?`<span class="timer" id="timer-${i}"></span>`:''}</div>`;
-  }).join("");
-  actionsArray.forEach((act, i) => { if(act.status === "validé" && act.expiryDate) startTimer(act.expiryDate, `timer-${i}`); });
-};
-
-// NOUVEAU : Rendu des trades
-window.renderClientTrades = (tradesArray) => {
-  const list = document.getElementById("clientTradesList");
-  if(tradesArray.length === 0) return list.innerHTML = "<i>Aucun trade en cours.</i>";
-  
-  // N'afficher que les trades en cours (ou les tout derniers) pour ne pas surcharger l'index
-  let activeTrades = tradesArray.filter(t => t.status === "en cours");
-  if(activeTrades.length === 0) return list.innerHTML = "<i>Aucun trade actif actuellement.</i>";
-
-  list.innerHTML = activeTrades.map((t, i) => {
-    let predictionText = t.prediction === 'above' ? 'Au-dessus de' : (t.prediction === 'below' ? 'En dessous de' : 'Égal à');
-    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;">
-      <strong style="color:#17a2b8;">Mise : ${t.stake} FCFA</strong>
-      <div style="font-size: 12px; color: #555; margin-top: 3px;">Cible : ${predictionText} ${t.target}</div>
-      <span style="color:orange; font-weight:bold; font-size:12px;">${t.status}</span>
-    </div>`;
-  }).join("");
-};
-
-function startTimer(expStr, id) {
-    const target = new Date(expStr).getTime();
-    const f = setInterval(() => {
-        const diff = target - new Date().getTime(); const el = document.getElementById(id);
-        if(!el) return clearInterval(f);
-        if (diff <= 0) { el.textContent = "Action Terminée !"; el.style.color = "green"; clearInterval(f); } 
-        else { el.textContent = `Temps restant: ${Math.floor(diff/(1000*60*60*24))}j ${Math.floor((diff%(1000*60*60*24))/(1000*60*60))}h ${Math.floor((diff%(1000*60*60))/(1000*60))}m ${Math.floor((diff%(1000*60))/1000)}s`; }
-    }, 1000); timersIntervals.push(f);
-}
-</script>
 </body>
 </html>
