@@ -50,7 +50,7 @@ button:hover { background: #0056b3; }
     .wallet-header { flex-direction: column; align-items: flex-start; gap: 10px; }
     .wallet-footer { flex-direction: column; gap: 8px; }
     .box-amount { font-size: 14px; }
-    input, button, select { font-size: 16px; padding: 14px; /* Plus large pour les doigts sur mobile */ }
+    input, button, select { font-size: 16px; padding: 14px; }
     h4 { font-size: 15px; }
     .scroll-box { font-size: 12px; }
     .hist-item { flex-direction: column; align-items: flex-start; gap: 5px; }
@@ -104,6 +104,22 @@ button:hover { background: #0056b3; }
       </div>
   </div>
 
+  <div class="actions-section" style="margin-top:20px; padding-top:15px; border-top:1px solid #ddd;">
+      <h3 style="color:#007bff; text-align:left;">Acheter des Actions</h3>
+      <input type="text" id="actionName" placeholder="Entrez le nom de votre action">
+      <input type="number" id="actionStake" placeholder="Montant de la mise (FCFA)">
+      <select id="actionTime">
+          <option value="7 Jours">7 Jours (5%) Limite: 5 000 F</option>
+          <option value="30 Jours">30 Jours (10%) Limite: 15 000 F</option>
+          <option value="2 Mois">2 Mois (20%) Limite: 25 000 F</option>
+          <option value="4 Mois">4 Mois (25%) Limite: 35 000 F</option>
+          <option value="6 Mois">6 Mois (35%) Limite: 40 000 F</option>
+          <option value="7 Mois">7 Mois (40%) Limite: 50 000 F</option>
+          <option value="9 Mois">9 Mois (45%) Limite: 55 000 F</option>
+      </select>
+      <button onclick="buyAction()" style="background: #28a745;">Valider l'achat d'action</button>
+  </div>
+
   <h4 style="text-align:left; color:#28a745; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:30px;">Mes actions en cours</h4>
   <div id="clientActionsList" class="scroll-box"><i>Chargement...</i></div>
 
@@ -117,7 +133,7 @@ button:hover { background: #0056b3; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -149,11 +165,165 @@ onAuthStateChanged(auth, async (user) => {
             
             window.renderClientActions(userData.actions || []);
             window.renderClientTrades(userData.trades || []);
+
+            window.loadAnnouncements();
+            
+            // VERIFICATION AUTOMATIQUE DES ACTIONS AU CHARGEMENT
+            window.processAutoPayout();
         }
     } else {
         window.location.href = "login.html";
     }
 });
+
+// NOUVEAU : FONCTION DE VERSEMENT AUTOMATIQUE
+window.processAutoPayout = async () => {
+    if (!currentUser) return;
+    const userRef = doc(db, "users", currentUser.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return;
+
+    let userData = snap.data();
+    let actions = userData.actions || [];
+    let balance = Number(userData.balance) || 0;
+    let totalGenerated = Number(userData.totalGenerated) || 0;
+    let history = userData.history || [];
+    let notifications = userData.notifications || [];
+    let hasChanges = false;
+    const now = new Date().getTime();
+
+    actions.forEach(act => {
+        // L'action est validée, non payée, et la date d'expiration est atteinte
+        if (act.status === "validé" && !act.isPaid && act.expiryDate) {
+            let expTime = new Date(act.expiryDate).getTime();
+            if (now >= expTime) {
+                // Déduction du pourcentage via le libellé de l'action
+                let pct = 0;
+                if(act.time === "7 Jours") pct = 5;
+                else if(act.time === "30 Jours") pct = 10;
+                else if(act.time === "2 Mois") pct = 20;
+                else if(act.time === "4 Mois") pct = 25;
+                else if(act.time === "6 Mois") pct = 35;
+                else if(act.time === "7 Mois") pct = 40;
+                else if(act.time === "9 Mois") pct = 45;
+                
+                let stake = Number(act.stake) || 0;
+                let profit = (stake * pct) / 100;
+                let totalPayout = stake + profit; // Mise initiale + Bénéfice
+
+                balance += totalPayout;
+                totalGenerated += profit;
+                act.isPaid = true;
+                act.status = "terminé";
+
+                history.push({
+                    date: new Date().toISOString(),
+                    type: 'Action Terminée',
+                    amount: totalPayout,
+                    desc: `Gain Automatique : ${act.name} (+${pct}%)`
+                });
+
+                notifications.push({
+                    date: new Date().toISOString(),
+                    message: `🎉 Excellente nouvelle ! Votre action "${act.name}" est arrivée à terme. Votre mise de ${stake}F et votre bénéfice de ${profit}F (Total : ${totalPayout} FCFA) ont été automatiquement ajoutés à votre solde.`,
+                    type: 'success'
+                });
+
+                hasChanges = true;
+            }
+        }
+    });
+
+    if (hasChanges) {
+        await updateDoc(userRef, {
+            balance: balance,
+            totalGenerated: totalGenerated,
+            actions: actions,
+            history: history,
+            notifications: notifications
+        });
+        
+        // Mise à jour de l'interface en direct
+        document.getElementById("balanceAmount").textContent = balance + " FCFA";
+        document.getElementById("totalGenerated").textContent = totalGenerated + " FCFA";
+        window._clientHistory = history;
+        window._clientNotifications = notifications;
+        window.updateBadges();
+        window.renderClientActions(actions);
+    }
+};
+
+window.buyAction = async () => {
+    if(!currentUser) return;
+    const name = document.getElementById("actionName").value.trim();
+    const stake = parseInt(document.getElementById("actionStake").value);
+    const timeStr = document.getElementById("actionTime").value;
+
+    if (!name) return window.showPopup("Attention", "Veuillez donner un nom à votre action", true);
+    if (isNaN(stake) || stake <= 0) return window.showPopup("Attention", "Mise invalide", true);
+
+    // Vérification des limites de montants
+    if(stake >= 5001 && timeStr === "7 Jours") return window.showPopup("Refusé", "La durée de 7 jours est limitée à 5000F maximum.", true);
+    if(stake >= 15001 && timeStr === "30 Jours") return window.showPopup("Refusé", "La durée de 30 jours est limitée à 15000F maximum.", true);
+    if(stake >= 25001 && timeStr === "2 Mois") return window.showPopup("Refusé", "La durée de 2 mois est limitée à 25000F maximum.", true);
+    if(stake >= 35001 && timeStr === "4 Mois") return window.showPopup("Refusé", "La durée de 4 mois est limitée à 35000F maximum.", true);
+    if(stake >= 40001 && timeStr === "6 Mois") return window.showPopup("Refusé", "La durée de 6 mois est limitée à 40000F maximum.", true);
+    if(stake >= 50001 && timeStr === "7 Mois") return window.showPopup("Refusé", "La durée de 7 mois est limitée à 50000F maximum.", true);
+    if(stake >= 55001 && timeStr === "9 Mois") return window.showPopup("Refusé", "La durée de 9 mois est limitée à 55000F maximum.", true);
+
+    const snap = await getDoc(doc(db,"users",currentUser.uid));
+    let userData = snap.data();
+    if (userData.balance < stake) return window.showPopup("Attention", "Solde insuffisant pour acheter cette action.", true);
+
+    const newAction = {
+        name: name,
+        stake: stake,
+        time: timeStr,
+        status: "en attente",
+        date: new Date().toISOString(),
+        expiryDate: null,
+        isPaid: false
+    };
+
+    await updateDoc(doc(db,"users",currentUser.uid), { 
+        actions: arrayUnion(newAction),
+        history: arrayUnion({date: new Date().toISOString(), type: 'Achat Action', amount: 0, desc: `Attente: ${name}`})
+    });
+    
+    window.showPopup("Succès", "Action achetée et en attente de validation de l'administrateur.", false);
+    
+    // Vider les champs
+    document.getElementById("actionName").value = "";
+    document.getElementById("actionStake").value = "";
+    
+    // Rafraîchir l'affichage local sans recharger la page
+    userData.actions.push(newAction);
+    window.renderClientActions(userData.actions);
+};
+
+window.loadAnnouncements = () => {
+    const q = query(collection(db, "announcements"), orderBy("date", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const display = document.getElementById("announcementsDisplay");
+        if (snapshot.empty) {
+            display.innerHTML = "<i>Aucune annonce n'a été publiée pour le moment.</i>";
+            return;
+        }
+        let html = "";
+        snapshot.forEach(docSnap => {
+            const ann = docSnap.data();
+            let dateStr = new Date(ann.date).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+            html += `
+                <div style="background: white; border-left: 4px solid #007bff; padding: 12px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <strong style="color: #333; font-size: 14px;">${ann.title}</strong>
+                    <span style="font-size: 10px; color: #888; float: right;">${dateStr}</span>
+                    <div style="margin-top: 8px; font-size: 13px; color: #555; white-space: pre-wrap;">${ann.message}</div>
+                </div>
+            `;
+        });
+        display.innerHTML = html;
+    });
+};
 
 window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
 window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").textContent=msg; document.getElementById("customPopup").classList.add("show"); };
@@ -187,29 +357,34 @@ window.closeHistoryPopup = () => document.getElementById("histPopup").classList.
 window.requestWithdrawal=async()=>{
   const amt=parseInt(document.getElementById("withdrawAmount").value);
   if(isNaN(amt) || amt <= 0) return;
-  if(amt < 1000) return showPopup("Attention", "Le montant minimum de retrait est de 1000 FCFA.", true);
+  if(amt < 1000) return window.showPopup("Attention", "Le montant minimum de retrait est de 1000 FCFA.", true);
   const snap = await getDoc(doc(db,"users",currentUser.uid));
-  if (amt > snap.data().balance) return showPopup("Attention", "Votre solde est insuffisant.", true);
+  if (amt > snap.data().balance) return window.showPopup("Attention", "Votre solde est insuffisant.", true);
   await updateDoc(doc(db,"users",currentUser.uid),{ withdrawRequests: arrayUnion({date:new Date().toISOString(), status:"en attente", amount:amt}) });
-  showPopup("Succès", "Votre demande de retrait a bien été envoyée !", false); document.getElementById("withdrawAmount").value = "";
+  window.showPopup("Succès", "Votre demande de retrait a bien été envoyée !", false); document.getElementById("withdrawAmount").value = "";
 };
 
 window.renderClientActions = (actionsArray) => {
   const list = document.getElementById("clientActionsList"); timersIntervals.forEach(clearInterval); 
   if(actionsArray.length === 0) return list.innerHTML = "<i>Aucune action.</i>";
   list.innerHTML = actionsArray.map((act, i) => {
-    let col = act.status === "validé" ? "green" : (act.status === "rejeté" ? "red" : "orange");
-    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;"><strong>${act.name}</strong> - ${act.stake} FCFA<span style="float:right; color:${col}; font-weight:bold;">${act.status}</span>${act.status==="validé"?`<span class="timer" id="timer-${i}"></span>`:''}</div>`;
+    let col = act.status === "validé" ? "green" : (act.status === "rejeté" ? "red" : (act.status === "terminé" ? "#28a745" : "orange"));
+    let statusText = act.status === "terminé" ? "Payé & Terminé" : act.status;
+    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;"><strong>${act.name}</strong> - ${act.stake} FCFA<span style="float:right; color:${col}; font-weight:bold;">${statusText}</span>${act.status==="validé"?`<span class="timer" id="timer-${i}"></span>`:''}</div>`;
   }).join("");
-  actionsArray.forEach((act, i) => { if(act.status === "validé" && act.expiryDate) startTimer(act.expiryDate, `timer-${i}`); });
+  
+  // Démarrer les timers pour les actions validées
+  actionsArray.forEach((act, i) => { 
+      if(act.status === "validé" && act.expiryDate) {
+          startTimer(act.expiryDate, `timer-${i}`); 
+      }
+  });
 };
 
-// NOUVEAU : Rendu des trades
 window.renderClientTrades = (tradesArray) => {
   const list = document.getElementById("clientTradesList");
   if(tradesArray.length === 0) return list.innerHTML = "<i>Aucun trade en cours.</i>";
   
-  // N'afficher que les trades en cours (ou les tout derniers) pour ne pas surcharger l'index
   let activeTrades = tradesArray.filter(t => t.status === "en cours");
   if(activeTrades.length === 0) return list.innerHTML = "<i>Aucun trade actif actuellement.</i>";
 
@@ -226,11 +401,21 @@ window.renderClientTrades = (tradesArray) => {
 function startTimer(expStr, id) {
     const target = new Date(expStr).getTime();
     const f = setInterval(() => {
-        const diff = target - new Date().getTime(); const el = document.getElementById(id);
+        const diff = target - new Date().getTime(); 
+        const el = document.getElementById(id);
         if(!el) return clearInterval(f);
-        if (diff <= 0) { el.textContent = "Action Terminée !"; el.style.color = "green"; clearInterval(f); } 
-        else { el.textContent = `Temps restant: ${Math.floor(diff/(1000*60*60*24))}j ${Math.floor((diff%(1000*60*60*24))/(1000*60*60))}h ${Math.floor((diff%(1000*60*60))/(1000*60))}m ${Math.floor((diff%(1000*60))/1000)}s`; }
-    }, 1000); timersIntervals.push(f);
+        
+        if (diff <= 0) { 
+            el.textContent = "Validation des gains en cours..."; 
+            el.style.color = "green"; 
+            clearInterval(f); 
+            // Appel automatique de la fonction de paiement quand le compte à rebours est à 0
+            window.processAutoPayout();
+        } else { 
+            el.textContent = `Temps restant: ${Math.floor(diff/(1000*60*60*24))}j ${Math.floor((diff%(1000*60*60*24))/(1000*60*60))}h ${Math.floor((diff%(1000*60*60))/(1000*60))}m ${Math.floor((diff%(1000*60))/1000)}s`; 
+        }
+    }, 1000); 
+    timersIntervals.push(f);
 }
 </script>
 </body>
