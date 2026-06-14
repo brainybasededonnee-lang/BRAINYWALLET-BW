@@ -389,15 +389,46 @@ window.adminRejectWithdrawal = async (uid, idx) => {
 };
 
 window.adminValidateAction = async (uid, idx) => {
-    const snap = await getDoc(doc(db,"users",uid)); let userData = snap.data(); let act = userData.actions[idx];
+    const snap = await getDoc(doc(db,"users",uid)); 
+    let userData = snap.data(); 
+    let act = userData.actions[idx];
+    
     if(userData.balance < act.stake) return alert("Solde client insuffisant");
+    
     let expiry = new Date();
-    if(act.time === "7 Jours") expiry.setDate(expiry.getDate() + 7); else if(act.time === "16 Jours") expiry.setDate(expiry.getDate() + 16); else if(act.time === "30 Jours") expiry.setDate(expiry.getDate() + 30); else if(act.time === "3 Mois") expiry.setMonth(expiry.getMonth() + 3); else if(act.time === "5 Mois") expiry.setMonth(expiry.getMonth() + 5); else if(act.time === "6 Mois") expiry.setMonth(expiry.getMonth() + 6); else if(act.time === "8 Mois") expiry.setMonth(expiry.getMonth() + 8);
-    userData.balance -= act.stake; act.status = "validé"; act.expiryDate = expiry.toISOString(); act.validationDate = new Date().toISOString(); act.isPaid = false; 
+    
+    // Alignement strict avec les options du menu déroulant client
+    if(act.time === "7 Jours") {
+        expiry.setDate(expiry.getDate() + 7);
+    } else if(act.time === "30 Jours") {
+        expiry.setDate(expiry.getDate() + 30);
+    } else if(act.time === "2 Mois") {
+        expiry.setMonth(expiry.getMonth() + 2);
+    } else if(act.time === "4 Mois") {
+        expiry.setMonth(expiry.getMonth() + 4);
+    } else if(act.time === "6 Mois") {
+        expiry.setMonth(expiry.getMonth() + 6);
+    } else if(act.time === "7 Mois") {
+        expiry.setMonth(expiry.getMonth() + 7);
+    } else if(act.time === "9 Mois") {
+        expiry.setMonth(expiry.getMonth() + 9);
+    } else {
+        // Sécurité par défaut : si aucune option ne matche, on applique 7 jours par défaut
+        expiry.setDate(expiry.getDate() + 7);
+    }
+    
+    userData.balance -= act.stake; 
+    act.status = "validé"; 
+    act.expiryDate = expiry.toISOString(); 
+    act.validationDate = new Date().toISOString(); 
+    act.isPaid = false; 
+    
     userData.history.push({date: new Date().toISOString(), type:'Action Validée', amount: -act.stake, desc: `Action ${act.name} active`});
     userData.notifications.push({date: new Date().toISOString(), message: `Action ${act.name} validée ! Le décompte a commencé.`, type:'success'});
+    
     await updateDoc(doc(db,"users",uid), { balance: userData.balance, actions: userData.actions, history: userData.history, notifications: userData.notifications });
-    alert("Action validée !"); window.loadAdminTable();
+    alert("Action validée ! Le décompte du temps a commencé."); 
+    window.loadAdminTable();
 };
 
 window.adminRejectAction = async (uid, idx) => {
