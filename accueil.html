@@ -219,9 +219,11 @@ window.processAutoPayout = async () => {
     const now = new Date().getTime();
 
     actions.forEach(act => {
+        // L'action est validée, non payée, et la date d'expiration est atteinte
         if (act.status === "validé" && !act.isPaid && act.expiryDate) {
             let expTime = new Date(act.expiryDate).getTime();
             if (now >= expTime) {
+                // Déduction du pourcentage via le libellé de l'action
                 let pct = 0;
                 if(act.time === "7 Jours") pct = 5;
                 else if(act.time === "30 Jours") pct = 10;
@@ -233,7 +235,7 @@ window.processAutoPayout = async () => {
                 
                 let stake = Number(act.stake) || 0;
                 let profit = (stake * pct) / 100;
-                let totalPayout = stake + profit; 
+                let totalPayout = stake + profit; // Mise initiale + Bénéfice
 
                 balance += totalPayout;
                 totalGenerated += profit;
@@ -258,7 +260,7 @@ window.processAutoPayout = async () => {
         }
     });
 
-    if (hasChanges) {
+     if (hasChanges) {
         await updateDoc(userRef, {
             balance: balance,
             totalGenerated: totalGenerated,
@@ -267,6 +269,7 @@ window.processAutoPayout = async () => {
             notifications: notifications
         });
         
+        // Mise à jour de l'interface en direct
         document.getElementById("balanceAmount").textContent = balance + " FCFA";
         document.getElementById("totalGenerated").textContent = totalGenerated + " FCFA";
         window._clientHistory = history;
