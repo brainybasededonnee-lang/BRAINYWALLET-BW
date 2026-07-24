@@ -1,0 +1,646 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Accueil</title>
+<style>
+/* --- STYLES GLOBAUX --- */
+body{ font-family: Arial,sans-serif; background:#f0f6ff; margin:0; }
+.container{ width:90%; max-width:700px; margin:30px auto; background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+input, button, select{ width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+button{ background:#007bff; color:white; font-weight:bold; cursor:pointer; transition: background 0.3s; }
+button:hover { background: #0056b3; }
+.message{text-align:center;font-weight:bold;margin-top:10px;}
+
+/* --- WALLET CARD --- */
+.wallet-card{ background:linear-gradient(135deg,#0a7a18,#0f9d2f); color:white; border-radius:18px; padding:20px; box-shadow: 0 4px 15px rgba(10,122,24,0.3); }
+.wallet-header{ display:flex; justify-content:space-between; font-weight:bold; align-items: center; flex-wrap: wrap; gap: 10px; }
+.wallet-main{ margin:20px 0; }
+.amount{ font-size:28px; font-weight:bold; }
+.label{ font-size:14px; opacity:0.9; }
+.wallet-footer{ display:flex; gap:10px; }
+.box{ flex:1; background:rgba(255,255,255,0.15); border-radius:12px; padding:10px; text-align:center; }
+.box-title{font-size:12px;} .box-amount{font-size:16px;font-weight:bold;margin-top:5px;}
+
+/* --- SECTIONS (Annonces, Scroll-box) --- */
+.announcements-section { background: #e9ecef; border-radius: 8px; padding: 15px; margin-top: 25px; margin-bottom: 25px; }
+.scroll-box { max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: left; font-size: 13px; margin-bottom: 15px; }
+.hist-item { border-bottom: 1px dashed #ccc; padding: 8px 0; display:flex; justify-content: space-between; align-items: center;}
+.hist-positive { color: green; font-weight: bold; } .hist-negative { color: red; font-weight: bold; } .hist-neutral { color: #555; font-weight: bold; }
+.notif-item { padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height:1.4; }
+.notif-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.notif-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.notif-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+.timer { font-size: 12px; color: #d9534f; font-weight: bold; display: block; margin-top: 5px; }
+
+/* --- POPUPS --- */
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; box-sizing: border-box; }
+.popup-overlay.show .popup-content { transform: translateY(0); }
+.popup-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; }
+
+/* ========================================================================= */
+/* --- DESIGN RESPONSIVE (Mobiles & Tablettes) --- */
+/* ========================================================================= */
+@media (max-width: 600px) {
+    .container { width: 95%; margin: 15px auto; padding: 15px; }
+    .amount { font-size: 24px; }
+    .wallet-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .wallet-footer { flex-direction: column; gap: 8px; }
+    .box-amount { font-size: 14px; }
+    input, button, select { font-size: 16px; padding: 14px; }
+    h4 { font-size: 15px; }
+    .scroll-box { font-size: 12px; }
+    .hist-item { flex-direction: column; align-items: flex-start; gap: 5px; }
+    .hist-item > div:last-child { align-self: flex-end; }
+}
+</style>
+</head>
+<body>
+
+<div id="customPopup" class="popup-overlay"><div class="popup-content"><h3 id="popupTitle">Notification</h3><p id="popupMessage">Message</p><button class="popup-btn" onclick="closePopup()">OK</button></div></div>
+<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#e0a800; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">🔔 Notifications Récentes</strong><button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="notifPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
+<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">📜 Historique des Transactions</strong><button onclick="closeHistoryPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="histPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
+
+<div id="withdrawHistPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
+    <div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+        <div style="background:#28a745; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
+            <strong style="font-size:16px;">💸 Historique des Retraits</strong>
+            <button onclick="closeWithdrawHistPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+        </div>
+        <div id="withdrawHistPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div>
+    </div>
+</div>
+
+<div id="withdrawRequestPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
+    <div class="popup-content" style="max-width:400px; width:92%; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+        <div style="background:#007bff; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
+            <strong style="font-size:16px;">Demande de Retrait</strong>
+            <button onclick="closeWithdrawPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+        </div>
+        <div style="padding:20px; text-align:left; font-size:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Moyen de retrait :</label>
+            <select id="withdrawMethod" onchange="updateWithdrawForm()" style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc;">
+                <option value="direct">Retrait direct sur Mobile Money</option>
+                <option value="brainy">BRAINY AGENCY (Assistant Togo)</option>
+                <option value="moneyfusion">MoneyFusion (Bénin)</option>
+            </select>
+            
+            <div id="withdrawFormFields"></div>
+            
+            <label style="font-weight:bold; display:block; margin-top:10px; margin-bottom:5px;">Montant (FCFA) :</label>
+            <input type="number" id="newWithdrawAmount" placeholder="Ex: 5000" style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+            
+            <button onclick="submitWithdrawal()" style="background:#28a745; width:100%; padding:12px; font-size:15px; font-weight:bold; color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">Confirmer le retrait</button>
+        </div>
+    </div>
+</div>
+
+<div id="transferPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
+    <div class="popup-content" style="max-width:400px; width:92%; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+        <div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
+            <strong style="font-size:16px;">🔄 Transférer des fonds</strong>
+            <button onclick="closeTransferPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+        </div>
+        <div style="padding:20px; text-align:left; font-size:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Email du destinataire :</label>
+            <input type="email" id="transferEmail" oninput="searchRecipient()" placeholder="Ex: utilisateur@email.com" style="width:100%; margin-bottom:5px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+            <div id="transferRecipientName" style="color:#28a745; font-weight:bold; font-size:13px; margin-bottom:15px; min-height:18px;"></div>
+            
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Montant (FCFA) :</label>
+            <input type="number" id="transferAmount" placeholder="Ex: 1000" style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+            
+            <button onclick="submitTransfer()" style="background:#17a2b8; width:100%; padding:12px; font-size:15px; font-weight:bold; color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">Confirmer le transfert</button>
+        </div>
+    </div>
+</div>
+
+<div id="depositPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
+    <div class="popup-content" style="max-width:400px; width:92%; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+        <div style="background:#28a745; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
+            <strong style="font-size:16px;">💳 Dépôt</strong>
+            <button onclick="closeDepositPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+        </div>
+        <div style="padding:20px; text-align:left; font-size:14px;">
+            <p style="margin-top:0; margin-bottom:15px; line-height:1.5;">Avant de remplir votre formulaire de paiement, vous devez obligatoirement utiliser le même nom, la même adresse e-mail et le même numéro de téléphone que ceux utilisés lors de la création de votre compte.</p>
+            <p style="margin-top:0; margin-bottom:20px; line-height:1.5; font-weight:bold;">Cette étape est très importante afin que votre dépôt soit correctement identifié et traité.</p>
+          <button onclick="window.open('https://www.pay.moneyfusion.net/dont_1754810612121/', '_blank')" style="background:#28a745; width:100%; padding:12px; font-size:15px; font-weight:bold; color:white; border:none; border-radius:6px; cursor:pointer;">OK</button>
+        </div>
+    </div>
+</div>
+
+<div class="container hidden" id="dashboard-section">
+
+  <div class="wallet-card">
+    <div class="wallet-header">
+      <span id="clientName">Chargement...</span>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
+          🔔 Notifs <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+        <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
+          📜 Historique <span id="histBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+        <button onclick="openWithdrawHistPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0;">
+          💸 Retraits
+        </button>
+      </div>
+    </div>
+    
+    <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-top: 15px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
+      <div style="flex:1;"><div style="font-size:11px; opacity:0.9;">Code Affilié</div><strong id="myAffiliateCodeDisplay" style="font-size:16px; letter-spacing: 1px; color:#fff;">---</strong></div>
+      <div style="text-align:center; flex:1; border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2); padding: 0 5px;"><div style="font-size:11px; opacity:0.9;">Gains Parrainage (3%)</div><strong id="myAffiliateBonusDisplay" style="font-size:16px; color:#fff;">0 FCFA</strong></div>
+      <div style="text-align:right; flex:1;"><div style="font-size:11px; opacity:0.9;">Total Affiliés</div><strong id="myAffiliatesCountDisplay" style="font-size:16px; color:#fff;">0</strong></div>
+    </div>
+    
+    <div class="wallet-main" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div class="amount" id="balanceAmount">0 FCFA</div>
+        <div class="label">Solde disponible</div>
+      </div>
+      <button onclick="openWithdrawPopup()" style="background:#ffc107; color:#333; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; width:auto; margin:0; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+        💳 Retrait
+      </button>
+    </div>
+    
+    <button onclick="openDepositPopup()" style="background:#28a745; width:100%; padding:10px; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+      💳 Dépôt
+    </button>
+    
+    <button onclick="openTransferPopup()" style="background:#17a2b8; width:100%; padding:10px; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+      🔄 Transférer
+    </button>
+
+    <div class="wallet-footer">
+      <div class="box"><div class="box-title">Solde total généré</div><div class="box-amount" id="totalGenerated">0 FCFA</div></div>
+      <div class="box"><div class="box-title">Payé</div><div class="box-amount" id="totalWithdrawn">0 FCFA</div></div>
+    </div>
+  </div>
+
+  <div class="announcements-section">
+      <h4 style="margin-top: 0; color: #007bff; font-size: 16px;"> Annonces de l'Administration</h4>
+      <div id="announcementsDisplay" style="font-size: 13px; color: #444; line-height: 1.5;">
+          <i>Bienvenue sur votre espace sécurisé. Restez à l'écoute pour les prochaines annonces.</i>
+      </div>
+  </div>
+
+  <br>
+  <button onclick="logout()" style="background:#dc3545; margin-top:20px;">Se déconnecter</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, orderBy, onSnapshot, getDocs, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+
+let currentUser = null;
+let timersIntervals = [];
+window._clientNotifications = []; 
+window._clientHistory = [];
+window._clientWithdrawRequests = [];
+
+let recipientId = null;
+let recipientDataTemp = null;
+let searchTimeout = null;
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists()) {
+            const userData = snap.data();
+            if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+            
+            document.getElementById("dashboard-section").classList.remove("hidden");
+            document.getElementById("clientName").textContent = userData.fullName;
+            document.getElementById("myAffiliateCodeDisplay").textContent = userData.myAffiliateCode || "---";
+            document.getElementById("myAffiliatesCountDisplay").textContent = userData.affiliatesCount || 0;
+            document.getElementById("myAffiliateBonusDisplay").textContent = (userData.totalAffiliateBonus || 0) + " FCFA";
+            document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
+            document.getElementById("totalGenerated").textContent = (userData.totalGenerated || 0) + " FCFA";
+            document.getElementById("totalWithdrawn").textContent = (userData.totalWithdrawn || 0) + " FCFA";
+
+            window._clientNotifications = userData.notifications || [];
+            window._clientHistory = userData.history || [];
+            window._clientWithdrawRequests = userData.withdrawRequests || [];
+            window.updateBadges();
+            
+            window.renderClientActions(userData.actions || []);
+            window.renderClientTrades(userData.trades || []);
+
+            window.loadAnnouncements();
+        }
+    } else {
+        window.location.href = "login.html";
+    }
+});
+
+/* --- NOUVEAUX SCRIPTS DE GESTION DU DEPOT --- */
+window.openDepositPopup = () => {
+    document.getElementById("depositPopup").classList.add("show");
+};
+
+window.closeDepositPopup = () => {
+    document.getElementById("depositPopup").classList.remove("show");
+};
+
+window.proceedToDeposit = () => {
+    // Lien externe à remplacer ultérieurement
+    window.location.href = "#"; 
+};
+/* --- FIN SCRIPTS DEPOT --- */
+
+/* --- NOUVEAUX SCRIPTS DE TRANSFERT --- */
+window.openTransferPopup = () => {
+    document.getElementById("transferPopup").classList.add("show");
+    document.getElementById("transferEmail").value = "";
+    document.getElementById("transferAmount").value = "";
+    document.getElementById("transferRecipientName").textContent = "";
+    recipientId = null;
+    recipientDataTemp = null;
+};
+
+window.closeTransferPopup = () => {
+    document.getElementById("transferPopup").classList.remove("show");
+};
+
+window.searchRecipient = () => {
+    clearTimeout(searchTimeout);
+    recipientId = null;
+    recipientDataTemp = null;
+    const email = document.getElementById("transferEmail").value.trim().toLowerCase();
+    const nameDisplay = document.getElementById("transferRecipientName");
+    nameDisplay.textContent = "Recherche en cours...";
+    nameDisplay.style.color = "#888";
+
+    if (!email) {
+        nameDisplay.textContent = "";
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                nameDisplay.textContent = "Aucun utilisateur trouvé avec cet e-mail.";
+                nameDisplay.style.color = "red";
+            } else {
+                const recDoc = querySnapshot.docs[0];
+                if (recDoc.id === currentUser.uid) {
+                    nameDisplay.textContent = "Vous ne pouvez pas vous transférer à vous-même.";
+                    nameDisplay.style.color = "red";
+                    return;
+                }
+                recipientId = recDoc.id;
+                recipientDataTemp = recDoc.data();
+                nameDisplay.textContent = "Destinataire : " + recipientDataTemp.fullName;
+                nameDisplay.style.color = "green";
+            }
+        } catch (e) {
+            nameDisplay.textContent = "Erreur de recherche.";
+            nameDisplay.style.color = "red";
+        }
+    }, 500);
+};
+
+window.submitTransfer = async () => {
+    if (!currentUser) return;
+    const amount = parseInt(document.getElementById("transferAmount").value);
+    
+    if (!recipientId || !recipientDataTemp) {
+        return window.showPopup("Erreur", "Veuillez renseigner un destinataire valide.", true);
+    }
+    if (isNaN(amount) || amount <= 0) {
+        return window.showPopup("Erreur", "Veuillez entrer un montant valide.", true);
+    }
+
+    const senderRef = doc(db, "users", currentUser.uid);
+    const senderSnap = await getDoc(senderRef);
+    if (!senderSnap.exists()) return;
+    
+    let senderData = senderSnap.data();
+
+    if (amount > senderData.balance) {
+        return window.showPopup("Erreur", "Solde insuffisant pour ce transfert.", true);
+    }
+
+    let newSenderBalance = senderData.balance - amount;
+    let newRecipientBalance = (recipientDataTemp.balance || 0) + amount;
+    const dateIso = new Date().toISOString();
+    const senderName = senderData.fullName || "Un utilisateur";
+
+    const senderHist = {
+        date: dateIso,
+        type: 'Transfert Envoyé',
+        amount: -amount,
+        desc: `Envoyé à ${recipientDataTemp.fullName}`
+    };
+    const senderNotif = {
+        date: dateIso,
+        message: `Vous avez transféré ${amount} FCFA à ${recipientDataTemp.fullName} avec succès.`,
+        type: 'success'
+    };
+
+    const recipientHist = {
+        date: dateIso,
+        type: 'Transfert Reçu',
+        amount: amount,
+        desc: `Reçu de ${senderName}`
+    };
+    const recipientNotif = {
+        date: dateIso,
+        message: `Vous avez reçu un transfert de ${amount} FCFA de la part de ${senderName}.`,
+        type: 'success'
+    };
+
+    try {
+        await updateDoc(senderRef, {
+            balance: newSenderBalance,
+            history: arrayUnion(senderHist),
+            notifications: arrayUnion(senderNotif)
+        });
+        
+        const recipientRef = doc(db, "users", recipientId);
+        await updateDoc(recipientRef, {
+            balance: newRecipientBalance,
+            history: arrayUnion(recipientHist),
+            notifications: arrayUnion(recipientNotif)
+        });
+
+        document.getElementById("balanceAmount").textContent = newSenderBalance + " FCFA";
+        window._clientHistory.push(senderHist);
+        window._clientNotifications.push(senderNotif);
+        window.updateBadges();
+
+        window.showPopup("Succès", `Le transfert de ${amount} FCFA à ${recipientDataTemp.fullName} a été effectué.`, false);
+        window.closeTransferPopup();
+    } catch (e) {
+        window.showPopup("Erreur", "Une erreur est survenue lors du transfert.", true);
+    }
+};
+/* --- FIN SCRIPTS TRANSFERT --- */
+
+/* --- NOUVEAUX SCRIPTS DE GESTION DES RETRAITS --- */
+window.openWithdrawHistPopup = () => {
+    const l = document.getElementById("withdrawHistPopupList");
+    if (window._clientWithdrawRequests.length === 0) {
+        l.innerHTML = "<i>Aucun retrait n'a été demandé pour le moment.</i>";
+    } else {
+        l.innerHTML = [...window._clientWithdrawRequests].reverse().map(r => {
+            let col = r.status === "validé" ? "green" : (r.status === "rejeté" ? "red" : "orange");
+            let meth = r.method ? r.method : "Non spécifié";
+            return `<div class="hist-item" style="flex-direction:column; align-items:flex-start; padding:10px 0;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <strong style="font-size:15px;">${r.amount} FCFA</strong>
+                    <span style="color:${col}; font-weight:bold; text-transform:capitalize;">${r.status}</span>
+                </div>
+                <div style="font-size:12px; color:#555; margin-top:6px; line-height: 1.4;">
+                    <strong>Méthode :</strong> ${meth} <br>
+                    <strong>Date :</strong> ${new Date(r.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}
+                </div>
+            </div>`;
+        }).join("");
+    }
+    document.getElementById("withdrawHistPopup").classList.add("show");
+};
+
+window.closeWithdrawHistPopup = () => document.getElementById("withdrawHistPopup").classList.remove("show");
+
+window.openWithdrawPopup = () => {
+    document.getElementById("withdrawRequestPopup").classList.add("show");
+    window.updateWithdrawForm();
+};
+
+window.closeWithdrawPopup = () => {
+    document.getElementById("withdrawRequestPopup").classList.remove("show");
+    document.getElementById("newWithdrawAmount").value = "";
+};
+
+window.updateWithdrawForm = () => {
+    const method = document.getElementById("withdrawMethod").value;
+    const fieldsDiv = document.getElementById("withdrawFormFields");
+    let html = "";
+    const inputStyle = "width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;";
+    const labelStyle = "font-weight:bold; display:block; margin-bottom:5px; font-size:13px; color:#333;";
+    
+    if(method === "direct") {
+        html = `<label style="${labelStyle}">Numéro Mobile Money :</label>
+                <input type="text" id="withdrawPhone" placeholder="Ex: 90000000" style="${inputStyle}">`;
+    } else if(method === "brainy") {
+        html = `<label style="${labelStyle}">Nom complet :</label>
+                <input type="text" id="withdrawName" placeholder="Votre nom complet" style="${inputStyle}">
+                <label style="${labelStyle}">Numéro de téléphone :</label>
+                <input type="text" id="withdrawPhone" placeholder="Ex: 90000000" style="${inputStyle}">`;
+    } else if(method === "moneyfusion") {
+        html = `<label style="${labelStyle}">Numéro de téléphone (+229 obligatoire) :</label>
+                <input type="text" id="withdrawPhone" placeholder="Ex: +22900000000" style="${inputStyle}">`;
+    }
+    fieldsDiv.innerHTML = html;
+};
+
+window.submitWithdrawal = async () => {
+    if(!currentUser) return;
+    const method = document.getElementById("withdrawMethod").value;
+    const amount = parseInt(document.getElementById("newWithdrawAmount").value);
+    const phoneEl = document.getElementById("withdrawPhone");
+    const nameEl = document.getElementById("withdrawName");
+    
+    const phone = phoneEl ? phoneEl.value.trim() : "";
+    const fullName = nameEl ? nameEl.value.trim() : "";
+
+    if(isNaN(amount) || amount <= 0) return window.showPopup("Attention", "Montant de retrait invalide.", true);
+    
+    // Validations par formulaire
+    if(method === "direct" && !phone) return window.showPopup("Attention", "Veuillez entrer votre numéro Mobile Money.", true);
+    if(method === "brainy" && (!phone || !fullName)) return window.showPopup("Attention", "Veuillez remplir tous les champs (Nom et Numéro).", true);
+    if(method === "moneyfusion") {
+        if(!phone) return window.showPopup("Attention", "Veuillez entrer votre numéro de téléphone.", true);
+        if(!phone.startsWith("+229")) return window.showPopup("Erreur", "Pour MoneyFusion (Bénin), le numéro doit obligatoirement commencer par l'indicatif +229.", true);
+    }
+
+    const snap = await getDoc(doc(db,"users",currentUser.uid));
+    const userData = snap.data();
+    
+    // Conditions strictes sur le solde
+    if(amount > userData.balance) return window.showPopup("Attention", "Votre solde est insuffisant pour effectuer ce retrait.", true);
+    if((userData.balance - amount) < 150) return window.showPopup("Refusé", "Après le retrait, il doit obligatoirement vous rester au minimum 150 FCFA sur votre compte.", true);
+
+    const req = {
+        date: new Date().toISOString(),
+        status: "en attente",
+        amount: amount,
+        method: method === "direct" ? "Mobile Money" : (method === "brainy" ? "BRAINY AGENCY" : "MoneyFusion"),
+        phone: phone,
+        fullName: fullName
+    };
+
+    await updateDoc(doc(db,"users",currentUser.uid), { 
+        withdrawRequests: arrayUnion(req) 
+    });
+    
+    window._clientWithdrawRequests.push(req);
+    window.showPopup("Succès", "Votre demande de retrait a bien été envoyée et est en attente de validation !", false);
+    window.closeWithdrawPopup();
+};
+/* --- FIN SCRIPTS GESTION RETRAITS --- */
+
+window.buyAction = async () => {
+    if(!currentUser) return;
+    const name = document.getElementById("actionName").value.trim();
+    const stake = parseInt(document.getElementById("actionStake").value);
+    const timeStr = document.getElementById("actionTime").value;
+
+    if (!name) return window.showPopup("Attention", "Veuillez donner un nom à votre action", true);
+    if (isNaN(stake) || stake <= 0) return window.showPopup("Attention", "Mise invalide", true);
+
+    if(stake >= 5001 && timeStr === "7 Jours") return window.showPopup("Refusé", "La durée de 7 jours est limitée à 5000F maximum.", true);
+    if(stake >= 15001 && timeStr === "30 Jours") return window.showPopup("Refusé", "La durée de 30 jours est limitée à 15000F maximum.", true);
+    if(stake >= 25001 && timeStr === "2 Mois") return window.showPopup("Refusé", "La durée de 2 mois est limitée à 25000F maximum.", true);
+    if(stake >= 35001 && timeStr === "4 Mois") return window.showPopup("Refusé", "La durée de 4 mois est limitée à 35000F maximum.", true);
+    if(stake >= 40001 && timeStr === "6 Mois") return window.showPopup("Refusé", "La durée de 6 mois est limitée à 40000F maximum.", true);
+    if(stake >= 50001 && timeStr === "7 Mois") return window.showPopup("Refusé", "La durée de 7 mois est limitée à 50000F maximum.", true);
+    if(stake >= 55001 && timeStr === "9 Mois") return window.showPopup("Refusé", "La durée de 9 mois est limitée à 55000F maximum.", true);
+
+    const snap = await getDoc(doc(db,"users",currentUser.uid));
+    let userData = snap.data();
+    if (userData.balance < stake) return window.showPopup("Attention", "Solde insuffisant pour acheter cette action.", true);
+
+    const newAction = {
+        name: name,
+        stake: stake,
+        time: timeStr,
+        status: "en attente",
+        date: new Date().toISOString(),
+        expiryDate: null,
+        isPaid: false
+    };
+
+    await updateDoc(doc(db,"users",currentUser.uid), { 
+        actions: arrayUnion(newAction),
+        history: arrayUnion({date: new Date().toISOString(), type: 'Achat Action', amount: 0, desc: `Attente: ${name}`})
+    });
+    
+    window.showPopup("Succès", "Action achetée et en attente de validation de l'administrateur.", false);
+    
+    document.getElementById("actionName").value = "";
+    document.getElementById("actionStake").value = "";
+    
+    userData.actions.push(newAction);
+    window.renderClientActions(userData.actions);
+};
+
+window.loadAnnouncements = () => {
+    const q = query(collection(db, "announcements"), orderBy("date", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const display = document.getElementById("announcementsDisplay");
+        if (snapshot.empty) {
+            display.innerHTML = "<i>Aucune annonce n'a été publiée pour le moment.</i>";
+            return;
+        }
+        let html = "";
+        snapshot.forEach(docSnap => {
+            const ann = docSnap.data();
+            let dateStr = new Date(ann.date).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+            html += `
+                <div style="background: white; padding: 12px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <strong style="color: #333; font-size: 14px;">${ann.title}</strong>
+                    <span style="font-size: 10px; color: #888; float: right;">${dateStr}</span>
+                    <div style="margin-top: 8px; font-size: 13px; color: #555; white-space: pre-wrap;">${ann.message}</div>
+                </div>
+            `;
+        });
+        display.innerHTML = html;
+    });
+};
+
+window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
+window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").textContent=msg; document.getElementById("customPopup").classList.add("show"); };
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser.uid}_${k}`) || "0"); }
+function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser.uid}_${k}`, c); }
+
+window.updateBadges = () => {
+  const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif"));
+  const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
+  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
+  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "block" : "none"; }
+  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "block" : "none"; }
+};
+
+window.openNotifPopup = () => {
+  const l = document.getElementById("notifPopupList");
+  l.innerHTML = window._clientNotifications.length === 0 ? "<i>Aucune notification.</i>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
+  document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
+};
+window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
+
+window.openHistoryPopup = () => {
+  const l = document.getElementById("histPopupList");
+  l.innerHTML = window._clientHistory.length === 0 ? "<i>Aucune transaction.</i>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
+  document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
+};
+window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
+
+window.renderClientActions = (actionsArray) => {
+  const list = document.getElementById("clientActionsList"); 
+  timersIntervals.forEach(clearInterval); 
+  if(!list) return;
+  if(actionsArray.length === 0) return list.innerHTML = "<i>Aucune action.</i>";
+  list.innerHTML = actionsArray.map((act, i) => {
+    let col = act.status === "validé" ? "green" : (act.status === "rejeté" ? "red" : (act.status === "terminé" ? "#28a745" : "orange"));
+    let statusText = act.status === "terminé" ? "Payé & Terminé" : act.status;
+    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;"><strong>${act.name}</strong> - ${act.stake} FCFA<span style="float:right; color:${col}; font-weight:bold;">${statusText}</span>${act.status==="validé"?`<span class="timer" id="timer-${i}"></span>`:''}</div>`;
+  }).join("");
+  
+  actionsArray.forEach((act, i) => { 
+      if(act.status === "validé" && act.expiryDate) {
+          startTimer(act.expiryDate, `timer-${i}`); 
+      }
+  });
+};
+
+window.renderClientTrades = (tradesArray) => {
+  const list = document.getElementById("clientTradesList");
+  if(!list) return;
+  if(tradesArray.length === 0) return list.innerHTML = "<i>Aucun trade en cours.</i>";
+  
+  let activeTrades = tradesArray.filter(t => t.status === "en cours");
+  if(activeTrades.length === 0) return list.innerHTML = "<i>Aucun trade actif actuellement.</i>";
+
+  list.innerHTML = activeTrades.map((t, i) => {
+    let predictionText = t.prediction === 'above' ? 'Au-dessus de' : (t.prediction === 'below' ? 'En dessous de' : 'Égal à');
+    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;">
+      <strong style="color:#17a2b8;">Mise : ${t.stake} FCFA</strong>
+      <div style="font-size: 12px; color: #555; margin-top: 3px;">Cible : ${predictionText} ${t.target}</div>
+      <span style="color:orange; font-weight:bold; font-size:12px;">${t.status}</span>
+    </div>`;
+  }).join("");
+};
+
+function startTimer(expStr, id) {
+    const target = new Date(expStr).getTime();
+    const f = setInterval(() => {
+        const diff = target - new Date().getTime(); 
+        const el = document.getElementById(id);
+        if(!el) return clearInterval(f);
+        
+        if (diff <= 0) { 
+            el.textContent = "Validation des gains en cours..."; 
+            el.style.color = "green"; 
+            clearInterval(f); 
+        } else { 
+            el.textContent = `Temps restant: ${Math.floor(diff/(1000*60*60*24))}j ${Math.floor((diff%(1000*60*60*24))/(1000*60*60))}h ${Math.floor((diff%(1000*60*60))/(1000*60))}m ${Math.floor((diff%(1000*60))/1000)}s`; 
+        }
+    }, 1000); 
+    timersIntervals.push(f);
+}
+</script>
+</body>
+</html>
