@@ -2,204 +2,519 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>BW - Accueil</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* --- STYLES GLOBAUX --- */
-body{ font-family: Arial,sans-serif; background:#f0f6ff; margin:0; }
-.container{ width:90%; max-width:700px; margin:30px auto; background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
-input, button, select{ width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; font-size: 14px; }
-button{ background:#007bff; color:white; font-weight:bold; cursor:pointer; transition: background 0.3s; }
-button:hover { background: #0056b3; }
-.message{text-align:center;font-weight:bold;margin-top:10px;}
+/* ========================================================================= */
+/* --- VARIABLES & RESET --- */
+/* ========================================================================= */
+:root {
+    --bg-color: #f3f6f9;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #0f172a;
+    --primary-light: #1e293b;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --accent-red: #ef4444;
+    --card-bg: #ffffff;
+    --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px -5px rgba(0,0,0,0.12);
+    --border-radius-lg: 24px;
+    --border-radius-md: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-/* --- WALLET CARD --- */
-.wallet-card{ background:linear-gradient(135deg,#0a7a18,#0f9d2f); color:white; border-radius:18px; padding:20px; box-shadow: 0 4px 15px rgba(10,122,24,0.3); }
-.wallet-header{ display:flex; justify-content:space-between; font-weight:bold; align-items: center; flex-wrap: wrap; gap: 10px; }
-.wallet-main{ margin:20px 0; }
-.amount{ font-size:28px; font-weight:bold; }
-.label{ font-size:14px; opacity:0.9; }
-.wallet-footer{ display:flex; gap:10px; }
-.box{ flex:1; background:rgba(255,255,255,0.15); border-radius:12px; padding:10px; text-align:center; }
-.box-title{font-size:12px;} .box-amount{font-size:16px;font-weight:bold;margin-top:5px;}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
 
-/* --- SECTIONS (Annonces, Scroll-box) --- */
-.announcements-section { background: #e9ecef; border-radius: 8px; padding: 15px; margin-top: 25px; margin-bottom: 25px; }
-.scroll-box { max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: left; font-size: 13px; margin-bottom: 15px; }
-.hist-item { border-bottom: 1px dashed #ccc; padding: 8px 0; display:flex; justify-content: space-between; align-items: center;}
-.hist-positive { color: green; font-weight: bold; } .hist-negative { color: red; font-weight: bold; } .hist-neutral { color: #555; font-weight: bold; }
-.notif-item { padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height:1.4; }
-.notif-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.notif-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-.notif-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-.timer { font-size: 12px; color: #d9534f; font-weight: bold; display: block; margin-top: 5px; }
 
-/* --- POPUPS --- */
-.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+.container { width: 92%; max-width: 600px; margin: 40px auto; display: flex; flex-direction: column; gap: 24px; animation: slideUp 0.6s ease-out; }
+.hidden { display: none !important; }
+
+.wallet-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-radius: var(--border-radius-lg);
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+.wallet-card::before {
+    content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none;
+}
+
+.wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.user-greeting { font-size: 18px; font-weight: 500; opacity: 0.9; display: flex; align-items: center; gap: 10px; }
+.user-greeting img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+
+.header-badges { display: flex; gap: 8px; }
+.badge-btn {
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; position: relative; transition: var(--transition);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.badge-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+.badge-indicator {
+    position: absolute; top: -4px; right: -4px; background: var(--accent-red); color: white;
+    font-size: 10px; font-weight: bold; border-radius: 50%; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.balance-section { margin-bottom: 30px; }
+.label { font-size: 14px; opacity: 0.8; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.amount { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
+
+/* Glassmorphism Affiliate Box */
+.affiliate-stats {
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-md); padding: 15px; margin-bottom: 30px;
+    display: flex; justify-content: space-between; align-items: center;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.aff-box { flex: 1; text-align: center; }
+.aff-box:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.1); }
+.aff-title { font-size: 11px; opacity: 0.7; text-transform: uppercase; margin-bottom: 4px; }
+.aff-val { font-size: 16px; font-weight: 600; }
+
+/* Grid des actions principales */
+.actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+.action-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    padding: 15px 10px; border-radius: var(--border-radius-md); border: none;
+    font-weight: 600; font-size: 13px; color: white; cursor: pointer; transition: var(--transition);
+}
+.action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+.btn-deposit { background: var(--accent-green); }
+.btn-transfer { background: var(--accent-blue); }
+.btn-withdraw { background: var(--accent-yellow); color: #78350f; }
+.action-icon { font-size: 22px; }
+
+/* Statistiques du bas */
+.wallet-footer { display: flex; gap: 15px; }
+.stat-box {
+    flex: 1; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; text-align: center;
+}
+.stat-box .box-title { font-size: 12px; opacity: 0.7; margin-bottom: 5px; }
+.stat-box .box-amount { font-size: 18px; font-weight: 700; }
+
+/* ========================================================================= */
+/* --- SECTIONS (Annonces) --- */
+/* ========================================================================= */
+.announcements-section {
+    background: var(--card-bg); border-radius: var(--border-radius-lg); padding: 25px;
+    box-shadow: var(--shadow-sm); transition: var(--transition);
+}
+.announcements-section:hover { box-shadow: var(--shadow-md); }
+.section-title { color: var(--primary); font-size: 18px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+/* ========================================================================= */
+/* --- ELEMENTS DE FORMULAIRE & BOUTONS --- */
+/* ========================================================================= */
+input, select {
+    width: 100%; padding: 14px 16px; margin: 8px 0 16px; border-radius: 12px;
+    border: 1px solid #e2e8f0; background: #f8fafc; font-size: 15px;
+    transition: var(--transition); outline: none; box-sizing: border-box; color: var(--text-main);
+}
+input:focus, select:focus { border-color: var(--accent-blue); background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+.btn-primary {
+    background: var(--accent-blue); color: white; width: 100%; padding: 14px;
+    border-radius: 12px; border: none; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4); }
+.btn-success { background: var(--accent-green); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: white; color: var(--accent-red); border: 2px solid #fee2e2; box-shadow: none; }
+.btn-danger:hover { background: #fee2e2; transform: translateY(-2px); }
+
+/* ========================================================================= */
+/* --- POPUPS MODERNS --- */
+/* ========================================================================= */
+.popup-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 2000;
+    opacity: 0; visibility: hidden; transition: var(--transition);
+}
 .popup-overlay.show { opacity: 1; visibility: visible; }
-.popup-content { background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; box-sizing: border-box; }
-.popup-overlay.show .popup-content { transform: translateY(0); }
-.popup-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; }
+.popup-content {
+    background: var(--card-bg); border-radius: var(--border-radius-lg); width: 90%; max-width: 420px;
+    max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: var(--shadow-lg); transform: scale(0.95) translateY(20px); transition: var(--transition);
+}
+.popup-overlay.show .popup-content { transform: scale(1) translateY(0); }
+
+.popup-header {
+    padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; color: white;
+}
+.popup-header h3 { font-size: 18px; font-weight: 600; margin: 0; }
+.close-btn {
+    background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px;
+    border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: var(--transition);
+}
+.close-btn:hover { background: rgba(255,255,255,0.3); transform: rotate(90deg); }
+
+.popup-body { padding: 24px; overflow-y: auto; flex: 1; font-size: 14px; }
+.popup-body.no-pad { padding: 0; }
+
+/* Couleurs des en-têtes de popup */
+.header-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.header-green { background: linear-gradient(135deg, #10b981, #059669); }
+.header-yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.header-dark { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+
+/* Listes d'historique et notifs */
+.list-container { padding: 15px; background: #fafafa; }
+.hist-item {
+    background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px;
+    margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: var(--transition);
+}
+.hist-item:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.hist-positive { color: var(--accent-green); font-weight: 700; font-size: 16px; }
+.hist-negative { color: var(--text-main); font-weight: 700; font-size: 16px; }
+.hist-neutral { color: var(--text-muted); font-weight: 700; font-size: 16px; }
+
+.notif-item { padding: 15px; margin-bottom: 12px; border-radius: 12px; font-size: 14px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.notif-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.notif-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.notif-info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
 
 /* ========================================================================= */
-/* --- DESIGN RESPONSIVE (Mobiles & Tablettes) --- */
+/* --- ASSISTANT FLOTTANT (Temps réel) --- */
 /* ========================================================================= */
+.support-fab {
+    position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px;
+    background: linear-gradient(135deg, var(--accent-blue), #2563eb); border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); display: flex; align-items: center; justify-content: center;
+    color: white; border: none; cursor: pointer; z-index: 1000; transition: var(--transition);
+    animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.support-fab::after {
+    content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%;
+    border: 2px solid var(--accent-blue); animation: pulseRipple 2s infinite; opacity: 0;
+}
+.support-fab:hover { transform: scale(1.08) rotate(-5deg); }
+.support-fab svg { width: 28px; height: 28px; fill: currentColor; }
+
+.support-window {
+    position: fixed; bottom: 100px; right: 24px; width: 340px; max-width: 90vw;
+    background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column; z-index: 1000; overflow: hidden;
+    opacity: 0; visibility: hidden; transform: translateY(20px) scale(0.95);
+    transition: var(--transition); transform-origin: bottom right; border: 1px solid rgba(0,0,0,0.05);
+}
+.support-window.active { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+
+.support-header {
+    background: var(--primary); padding: 20px; display: flex; justify-content: space-between; align-items: center; color: white;
+}
+.support-agent { display: flex; align-items: center; gap: 12px; }
+.support-avatar { position: relative; width: 40px; height: 40px; }
+.support-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
+.status-dot {
+    position: absolute; bottom: 0; right: 0; width: 12px; height: 12px;
+    background: var(--accent-green); border: 2px solid var(--primary); border-radius: 50%;
+}
+.support-info h4 { margin: 0; font-size: 15px; font-weight: 600; }
+.support-info p { margin: 0; font-size: 12px; opacity: 0.8; }
+
+.support-body { height: 350px; overflow-y: auto; padding: 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-wrap: break-word; }
+.msg-bot { background: white; color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: var(--shadow-sm); }
+.msg-user { background: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 10px rgba(59,130,246,0.2); }
+.msg-time { font-size: 10px; opacity: 0.7; margin-top: 5px; display: block; text-align: right; }
+
+.support-footer { padding: 15px; background: white; border-top: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px; }
+.support-input {
+    flex: 1; padding: 12px 16px; background: #f1f5f9; border: none; border-radius: 20px;
+    font-size: 14px; outline: none; margin: 0;
+}
+.support-send {
+    background: var(--accent-blue); color: white; border: none; width: 40px; height: 40px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: var(--transition); flex-shrink: 0;
+}
+.support-send:hover { background: #2563eb; transform: scale(1.1); }
+
+/* ========================================================================= */
+/* --- ANIMATIONS & RESPONSIVE --- */
+/* ========================================================================= */
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+@keyframes pulseRipple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
+
 @media (max-width: 600px) {
-    .container { width: 95%; margin: 15px auto; padding: 15px; }
-    .amount { font-size: 24px; }
-    .wallet-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .wallet-footer { flex-direction: column; gap: 8px; }
-    .box-amount { font-size: 14px; }
-    input, button, select { font-size: 16px; padding: 14px; }
-    h4 { font-size: 15px; }
-    .scroll-box { font-size: 12px; }
-    .hist-item { flex-direction: column; align-items: flex-start; gap: 5px; }
-    .hist-item > div:last-child { align-self: flex-end; }
+    .container { width: 95%; margin: 20px auto; }
+    .wallet-card { padding: 25px 20px; }
+    .amount { font-size: 36px; }
+    .wallet-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .header-badges { flex-wrap: wrap; }
+    .actions-grid { gap: 8px; }
+    .action-btn { padding: 12px 5px; font-size: 12px; }
+    .support-window { right: 10px; bottom: 90px; width: calc(100vw - 20px); }
+    .support-fab { bottom: 15px; right: 15px; }
 }
 </style>
 </head>
 <body>
 
-<div id="customPopup" class="popup-overlay"><div class="popup-content"><h3 id="popupTitle">Notification</h3><p id="popupMessage">Message</p><button class="popup-btn" onclick="closePopup()">OK</button></div></div>
-<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#e0a800; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">🔔 Notifications Récentes</strong><button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="notifPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
-<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">📜 Historique des Transactions</strong><button onclick="closeHistoryPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="histPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
+<!-- POPUPS (Design Modernisé, IDs Conservés) -->
 
-<div id="withdrawHistPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
-    <div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
-        <div style="background:#28a745; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
-            <strong style="font-size:16px;">💸 Historique des Retraits</strong>
-            <button onclick="closeWithdrawHistPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+<!-- Popup Custom (Alertes générales) -->
+<div id="customPopup" class="popup-overlay">
+    <div class="popup-content" style="max-width: 340px; align-items: center; padding: 30px 20px; text-align: center;">
+        <div style="background:#f1f5f9; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+            <svg fill="currentColor" viewBox="0 0 20 20" width="30" height="30" style="color:var(--text-main)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
         </div>
-        <div id="withdrawHistPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div>
+        <h3 id="popupTitle" style="margin-bottom:10px; font-size:20px; font-weight:700;">Notification</h3>
+        <p id="popupMessage" style="color:var(--text-muted); font-size:15px; margin-bottom:25px;">Message</p>
+        <button class="btn-primary" onclick="closePopup()" style="width:100%;">Compris</button>
     </div>
 </div>
 
-<div id="withdrawRequestPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
-    <div class="popup-content" style="max-width:400px; width:92%; display:flex; flex-direction:column; padding:0; overflow:hidden;">
-        <div style="background:#007bff; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
-            <strong style="font-size:16px;">Demande de Retrait</strong>
-            <button onclick="closeWithdrawPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+<!-- Popup Notifications -->
+<div id="notifPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-yellow">
+            <h3>🔔 Notifications</h3>
+            <button onclick="closeNotifPopup()" class="close-btn">✕</button>
         </div>
-        <div style="padding:20px; text-align:left; font-size:14px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Moyen de retrait :</label>
-            <select id="withdrawMethod" onchange="updateWithdrawForm()" style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc;">
-                <option value="direct">Retrait direct sur Mobile Money</option>
-                <option value="brainy">BRAINY AGENCY (Assistant Togo)</option>
+        <div class="popup-body no-pad">
+            <div id="notifPopupList" class="list-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Historique Transactions -->
+<div id="histPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-blue">
+            <h3>📜 Historique Général</h3>
+            <button onclick="closeHistoryPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body no-pad">
+            <div id="histPopupList" class="list-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Historique Retraits -->
+<div id="withdrawHistPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-green">
+            <h3>💸 Historique des Retraits</h3>
+            <button onclick="closeWithdrawHistPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body no-pad">
+            <div id="withdrawHistPopupList" class="list-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Demande de Retrait -->
+<div id="withdrawRequestPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-dark">
+            <h3>Faire un Retrait</h3>
+            <button onclick="closeWithdrawPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body">
+            <label style="font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Moyen de retrait</label>
+            <select id="withdrawMethod" onchange="updateWithdrawForm()">
+                <option value="direct">Mobile Money (Direct)</option>
+                <option value="brainy">BRAINY AGENCY (Togo)</option>
                 <option value="moneyfusion">MoneyFusion (Bénin)</option>
             </select>
             
             <div id="withdrawFormFields"></div>
             
-            <label style="font-weight:bold; display:block; margin-top:10px; margin-bottom:5px;">Montant (FCFA) :</label>
-            <input type="number" id="newWithdrawAmount" placeholder="Ex: 5000" style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+            <label style="font-weight:600; display:block; margin-top:15px; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Montant (FCFA)</label>
+            <input type="number" id="newWithdrawAmount" placeholder="Ex: 5000">
             
-            <button onclick="submitWithdrawal()" style="background:#28a745; width:100%; padding:12px; font-size:15px; font-weight:bold; color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">Confirmer le retrait</button>
+            <button onclick="submitWithdrawal()" class="btn-primary" style="margin-top:15px;">Confirmer le retrait</button>
         </div>
     </div>
 </div>
 
-<div id="transferPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
-    <div class="popup-content" style="max-width:400px; width:92%; display:flex; flex-direction:column; padding:0; overflow:hidden;">
-        <div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
-            <strong style="font-size:16px;">🔄 Transférer des fonds</strong>
-            <button onclick="closeTransferPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+<!-- Popup Transfert -->
+<div id="transferPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-blue">
+            <h3>🔄 Transférer des fonds</h3>
+            <button onclick="closeTransferPopup()" class="close-btn">✕</button>
         </div>
-        <div style="padding:20px; text-align:left; font-size:14px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Email du destinataire :</label>
-            <input type="email" id="transferEmail" oninput="searchRecipient()" placeholder="Ex: utilisateur@email.com" style="width:100%; margin-bottom:5px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
-            <div id="transferRecipientName" style="color:#28a745; font-weight:bold; font-size:13px; margin-bottom:15px; min-height:18px;"></div>
+        <div class="popup-body">
+            <label style="font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Email du destinataire</label>
+            <input type="email" id="transferEmail" oninput="searchRecipient()" placeholder="utilisateur@email.com">
+            <div id="transferRecipientName" style="color:var(--accent-green); font-weight:600; font-size:13px; margin-bottom:20px; min-height:18px;"></div>
             
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Montant (FCFA) :</label>
-            <input type="number" id="transferAmount" placeholder="Ex: 1000" style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+            <label style="font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Montant (FCFA)</label>
+            <input type="number" id="transferAmount" placeholder="Ex: 1000">
             
-            <button onclick="submitTransfer()" style="background:#17a2b8; width:100%; padding:12px; font-size:15px; font-weight:bold; color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">Confirmer le transfert</button>
+            <button onclick="submitTransfer()" class="btn-primary" style="margin-top:15px;">Envoyer les fonds</button>
         </div>
     </div>
 </div>
 
-<div id="depositPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;">
-    <div class="popup-content" style="max-width:400px; width:92%; display:flex; flex-direction:column; padding:0; overflow:hidden;">
-        <div style="background:#28a745; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
-            <strong style="font-size:16px;">💳 Dépôt</strong>
-            <button onclick="closeDepositPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button>
+<!-- Popup Dépôt -->
+<div id="depositPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-green">
+            <h3>💳 Recharger le compte</h3>
+            <button onclick="closeDepositPopup()" class="close-btn">✕</button>
         </div>
-        <div style="padding:20px; text-align:left; font-size:14px;">
-            <p style="margin-top:0; margin-bottom:15px; line-height:1.5;">Avant de remplir votre formulaire de paiement, vous devez obligatoirement utiliser le même nom, la même adresse e-mail et le même numéro de téléphone que ceux utilisés lors de la création de votre compte.</p>
-            <p style="margin-top:0; margin-bottom:20px; line-height:1.5; font-weight:bold;">Cette étape est très importante afin que votre dépôt soit correctement identifié et traité.</p>
-          <button onclick="window.open('https://www.pay.moneyfusion.net/dont_1754810612121/', '_blank')" style="background:#28a745; width:100%; padding:12px; font-size:15px; font-weight:bold; color:white; border:none; border-radius:6px; cursor:pointer;">OK</button>
+        <div class="popup-body">
+            <div style="background:#fff7ed; border-left:4px solid var(--accent-yellow); padding:15px; border-radius:8px; margin-bottom:20px;">
+                <p style="margin:0; font-size:13px; color:#9a3412; line-height:1.6;">
+                    <strong>Important :</strong> Lors du paiement, utilisez obligatoirement le <b>même nom, email et téléphone</b> que ceux de votre compte BrainyWallet.
+                </p>
+            </div>
+            <button onclick="window.open('https://www.pay.moneyfusion.net/dont_1754810612121/', '_blank')" class="btn-primary btn-success">Procéder au paiement</button>
         </div>
     </div>
 </div>
+
 
 <div class="container hidden" id="dashboard-section">
 
-  <div class="wallet-card">
-    <div class="wallet-header">
-      <span id="clientName">Chargement...</span>
-      <div style="display:flex; flex-wrap:wrap; gap:8px;">
-        <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
-          🔔 Notifs <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
-        </button>
-        <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
-          📜 Historique <span id="histBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
-        </button>
-        <button onclick="openWithdrawHistPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0;">
-          💸 Retraits
-        </button>
-      </div>
-    </div>
-    
-    <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-top: 15px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
-      <div style="flex:1;"><div style="font-size:11px; opacity:0.9;">Code Affilié</div><strong id="myAffiliateCodeDisplay" style="font-size:16px; letter-spacing: 1px; color:#fff;">---</strong></div>
-      <div style="text-align:center; flex:1; border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2); padding: 0 5px;"><div style="font-size:11px; opacity:0.9;">Gains Parrainage (3%)</div><strong id="myAffiliateBonusDisplay" style="font-size:16px; color:#fff;">0 FCFA</strong></div>
-      <div style="text-align:right; flex:1;"><div style="font-size:11px; opacity:0.9;">Total Affiliés</div><strong id="myAffiliatesCountDisplay" style="font-size:16px; color:#fff;">0</strong></div>
-    </div>
-    
-    <div class="wallet-main" style="display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <div class="amount" id="balanceAmount">0 FCFA</div>
-        <div class="label">Solde disponible</div>
-      </div>
-      <button onclick="openWithdrawPopup()" style="background:#ffc107; color:#333; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; width:auto; margin:0; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-        💳 Retrait
-      </button>
-    </div>
-    
-    <button onclick="openDepositPopup()" style="background:#28a745; width:100%; padding:10px; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-      💳 Dépôt
-    </button>
-    
-    <button onclick="openTransferPopup()" style="background:#17a2b8; width:100%; padding:10px; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-      🔄 Transférer
-    </button>
+    <div class="wallet-card">
+        <!-- En-tête de la carte -->
+        <div class="wallet-header">
+            <div class="user-greeting">
+                <img src="https://ui-avatars.com/api/?name=U&background=ffffff&color=0f172a" alt="Avatar">
+                <span id="clientName">Chargement...</span>
+            </div>
+            <div class="header-badges">
+                <button onclick="openNotifPopup()" class="badge-btn">
+                    🔔 <span id="notifBadge" class="badge-indicator" style="display:none;"></span>
+                </button>
+                <button onclick="openHistoryPopup()" class="badge-btn">
+                    📜 <span id="histBadge" class="badge-indicator" style="display:none;"></span>
+                </button>
+                <button onclick="openWithdrawHistPopup()" class="badge-btn">
+                    💸
+                </button>
+            </div>
+        </div>
+        
+        <!-- Solde Principal -->
+        <div class="balance-section">
+            <div class="label">Solde Disponible</div>
+            <div class="amount" id="balanceAmount">0 FCFA</div>
+        </div>
 
-    <div class="wallet-footer">
-      <div class="box"><div class="box-title">Solde total généré</div><div class="box-amount" id="totalGenerated">0 FCFA</div></div>
-      <div class="box"><div class="box-title">Payé</div><div class="box-amount" id="totalWithdrawn">0 FCFA</div></div>
+        <!-- Boutons d'Action (Grille 3 colonnes) -->
+        <div class="actions-grid">
+            <button onclick="openDepositPopup()" class="action-btn btn-deposit">
+                <div class="action-icon">💳</div> Dépôt
+            </button>
+            <button onclick="openTransferPopup()" class="action-btn btn-transfer">
+                <div class="action-icon">🔄</div> Transférer
+            </button>
+            <button onclick="openWithdrawPopup()" class="action-btn btn-withdraw">
+                <div class="action-icon">🏧</div> Retrait
+            </button>
+        </div>
+        
+        <!-- Infos Parrainage Glassmorphism -->
+        <div class="affiliate-stats">
+            <div class="aff-box">
+                <div class="aff-title">Code Affilié</div>
+                <div class="aff-val" id="myAffiliateCodeDisplay" style="letter-spacing:1px;">---</div>
+            </div>
+            <div class="aff-box">
+                <div class="aff-title">Gains (3%)</div>
+                <div class="aff-val" id="myAffiliateBonusDisplay" style="color:var(--accent-green);">0 FCFA</div>
+            </div>
+            <div class="aff-box">
+                <div class="aff-title">Affiliés</div>
+                <div class="aff-val" id="myAffiliatesCountDisplay">0</div>
+            </div>
+        </div>
+        
+        <!-- Totaux Footer -->
+        <div class="wallet-footer">
+            <div class="stat-box">
+                <div class="box-title">Total Généré</div>
+                <div class="box-amount" id="totalGenerated">0 FCFA</div>
+            </div>
+            <div class="stat-box">
+                <div class="box-title">Total Retiré</div>
+                <div class="box-amount" id="totalWithdrawn">0 FCFA</div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="announcements-section">
-      <h4 style="margin-top: 0; color: #007bff; font-size: 16px;"> Annonces de l'Administration</h4>
-      <div id="announcementsDisplay" style="font-size: 13px; color: #444; line-height: 1.5;">
-          <i>Bienvenue sur votre espace sécurisé. Restez à l'écoute pour les prochaines annonces.</i>
-      </div>
-  </div>
+    <!-- Section Annonces -->
+    <div class="announcements-section">
+        <div class="section-title">
+            <svg fill="currentColor" viewBox="0 0 20 20" width="22" height="22"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+            Annonces Récentes
+        </div>
+        <div id="announcementsDisplay" style="font-size: 14px; color: var(--text-muted);">
+            <i>Chargement des annonces de l'administration...</i>
+        </div>
+    </div>
 
-  <br>
-  <button onclick="logout()" style="background:#dc3545; margin-top:20px;">Se déconnecter</button>
+    <button onclick="logout()" class="btn-primary btn-danger">Se déconnecter de BrainyWallet</button>
+</div>
+
+
+<!-- Assistant Chat Flottant (Connecté à Firestore) -->
+<button class="support-fab" onclick="toggleSupportChat()" aria-label="Assistance">
+    <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 1.848.5 3.582 1.383 5.093L2 22l4.907-1.383A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.636 0-3.18-.396-4.52-1.096l-.326-.17-3.16.892.892-3.16-.17-.326A7.954 7.954 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path>
+    </svg>
+</button>
+
+<div class="support-window" id="supportChatWindow">
+    <div class="support-header">
+        <div class="support-agent">
+            <div class="support-avatar">
+                <img src="https://ui-avatars.com/api/?name=Assistant&background=ffffff&color=0f172a" alt="Assistant">
+                <span class="status-dot"></span>
+            </div>
+            <div class="support-info">
+                <h4>Assistance BW</h4>
+                <p>En ligne</p>
+            </div>
+        </div>
+        <button class="close-btn" onclick="toggleSupportChat()">✕</button>
+    </div>
+    <div class="support-body" id="supportChatBody">
+        <!-- Les messages s'afficheront ici en temps réel -->
+        <div style="text-align:center; color:#64748b; font-size:12px; margin-top:20px;">Chargement de la discussion...</div>
+    </div>
+    <div class="support-footer">
+        <input type="text" class="support-input" id="supportInput" placeholder="Écrivez votre message..." onkeypress="handleSupportEnter(event)">
+        <button class="support-send" onclick="sendSupportMessage()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+        </button>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, orderBy, onSnapshot, getDocs, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, orderBy, onSnapshot, getDocs, where, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const app = initializeApp(firebaseConfig); 
+const auth = getAuth(app); 
+const db = getFirestore(app);
 
 let currentUser = null;
-let timersIntervals = [];
 window._clientNotifications = []; 
 window._clientHistory = [];
 window._clientWithdrawRequests = [];
@@ -207,6 +522,7 @@ window._clientWithdrawRequests = [];
 let recipientId = null;
 let recipientDataTemp = null;
 let searchTimeout = null;
+let chatUnsubscribe = null; // Pour le nettoyage si besoin
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -229,18 +545,97 @@ onAuthStateChanged(auth, async (user) => {
             window._clientHistory = userData.history || [];
             window._clientWithdrawRequests = userData.withdrawRequests || [];
             window.updateBadges();
-            
-            window.renderClientActions(userData.actions || []);
-            window.renderClientTrades(userData.trades || []);
 
             window.loadAnnouncements();
+            
+            // --- INITIALISATION DU CHAT TEMPS REEL ---
+            initSupportChat(user.uid);
         }
     } else {
         window.location.href = "login.html";
     }
 });
 
-/* --- NOUVEAUX SCRIPTS DE GESTION DU DEPOT --- */
+
+/* ========================================================================= */
+/* --- SYSTEME DE DISCUSSION TEMPS REEL (ASSISTANT) --- */
+/* ========================================================================= */
+function initSupportChat(uid) {
+    const q = query(collection(db, "users", uid, "support_messages"), orderBy("date", "asc"));
+    
+    chatUnsubscribe = onSnapshot(q, (snapshot) => {
+        const body = document.getElementById('supportChatBody');
+        
+        if (snapshot.empty) {
+            body.innerHTML = `<div class="msg-bubble msg-bot">
+                Bonjour ! Je suis l'assistant de BrainyWallet. Comment puis-je vous aider avec votre compte aujourd'hui ?
+            </div>`;
+            return;
+        }
+
+        let html = "";
+        snapshot.forEach(docSnap => {
+            const msg = docSnap.data();
+            const timeStr = new Date(msg.date).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+            const textEscaped = (msg.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            if (msg.sender === 'user') {
+                html += `<div class="msg-bubble msg-user">${textEscaped} <span class="msg-time" style="color:rgba(255,255,255,0.7)">${timeStr}</span></div>`;
+            } else {
+                html += `<div class="msg-bubble msg-bot">${textEscaped} <span class="msg-time">${timeStr}</span></div>`;
+            }
+        });
+        
+        body.innerHTML = html;
+        body.scrollTop = body.scrollHeight;
+    });
+}
+
+window.toggleSupportChat = () => {
+    document.getElementById('supportChatWindow').classList.toggle('active');
+    setTimeout(() => {
+        const body = document.getElementById('supportChatBody');
+        body.scrollTop = body.scrollHeight;
+    }, 200);
+};
+
+window.handleSupportEnter = (e) => {
+    if(e.key === 'Enter') window.sendSupportMessage();
+};
+
+window.sendSupportMessage = async () => {
+    if(!currentUser) return;
+    const input = document.getElementById('supportInput');
+    const msg = input.value.trim();
+    if(!msg) return;
+
+    input.value = ''; // Nettoyage visuel immédiat pour une meilleure fluidité
+    
+    try {
+        const msgData = {
+            text: msg,
+            sender: 'user',
+            date: new Date().toISOString()
+        };
+        
+        // 1. Ajout du message dans la collection 'support_messages'
+        await addDoc(collection(db, "users", currentUser.uid, "support_messages"), msgData);
+
+        // 2. Mise à jour des informations de contact pour le tri côté Admin
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            "supportInfo.lastDate": msgData.date,
+            "supportInfo.lastMessage": msg
+        });
+
+    } catch (e) {
+        console.error("Erreur lors de l'envoi du message : ", e);
+        window.showPopup("Erreur", "Impossible d'envoyer votre message. Vérifiez votre connexion.", true);
+    }
+};
+/* ========================================================================= */
+
+
+/* --- SCRIPTS DE GESTION DU DEPOT --- */
 window.openDepositPopup = () => {
     document.getElementById("depositPopup").classList.add("show");
 };
@@ -248,14 +643,9 @@ window.openDepositPopup = () => {
 window.closeDepositPopup = () => {
     document.getElementById("depositPopup").classList.remove("show");
 };
-
-window.proceedToDeposit = () => {
-    // Lien externe à remplacer ultérieurement
-    window.location.href = "#"; 
-};
 /* --- FIN SCRIPTS DEPOT --- */
 
-/* --- NOUVEAUX SCRIPTS DE TRANSFERT --- */
+/* --- SCRIPTS DE TRANSFERT --- */
 window.openTransferPopup = () => {
     document.getElementById("transferPopup").classList.add("show");
     document.getElementById("transferEmail").value = "";
@@ -386,21 +776,21 @@ window.submitTransfer = async () => {
 };
 /* --- FIN SCRIPTS TRANSFERT --- */
 
-/* --- NOUVEAUX SCRIPTS DE GESTION DES RETRAITS --- */
+/* --- SCRIPTS DE GESTION DES RETRAITS --- */
 window.openWithdrawHistPopup = () => {
     const l = document.getElementById("withdrawHistPopupList");
     if (window._clientWithdrawRequests.length === 0) {
-        l.innerHTML = "<i>Aucun retrait n'a été demandé pour le moment.</i>";
+        l.innerHTML = "<div style='padding:20px; text-align:center; color:#64748b;'><i>Aucun retrait n'a été demandé pour le moment.</i></div>";
     } else {
         l.innerHTML = [...window._clientWithdrawRequests].reverse().map(r => {
-            let col = r.status === "validé" ? "green" : (r.status === "rejeté" ? "red" : "orange");
+            let col = r.status === "validé" ? "var(--accent-green)" : (r.status === "rejeté" ? "var(--accent-red)" : "var(--accent-yellow)");
             let meth = r.method ? r.method : "Non spécifié";
-            return `<div class="hist-item" style="flex-direction:column; align-items:flex-start; padding:10px 0;">
+            return `<div class="hist-item" style="flex-direction:column; align-items:flex-start;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
-                    <strong style="font-size:15px;">${r.amount} FCFA</strong>
-                    <span style="color:${col}; font-weight:bold; text-transform:capitalize;">${r.status}</span>
+                    <strong style="font-size:16px;">${r.amount} FCFA</strong>
+                    <span style="color:${col}; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.5px;">${r.status}</span>
                 </div>
-                <div style="font-size:12px; color:#555; margin-top:6px; line-height: 1.4;">
+                <div style="font-size:13px; color:var(--text-muted); margin-top:8px; line-height: 1.5;">
                     <strong>Méthode :</strong> ${meth} <br>
                     <strong>Date :</strong> ${new Date(r.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}
                 </div>
@@ -426,8 +816,9 @@ window.updateWithdrawForm = () => {
     const method = document.getElementById("withdrawMethod").value;
     const fieldsDiv = document.getElementById("withdrawFormFields");
     let html = "";
-    const inputStyle = "width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;";
-    const labelStyle = "font-weight:bold; display:block; margin-bottom:5px; font-size:13px; color:#333;";
+    
+    const inputStyle = "width:100%; padding:14px 16px; margin:8px 0 16px; border-radius:12px; border:1px solid #e2e8f0; background:#f8fafc; font-size:15px; outline:none; box-sizing:border-box;";
+    const labelStyle = "font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:#64748b;";
     
     if(method === "direct") {
         html = `<label style="${labelStyle}">Numéro Mobile Money :</label>
@@ -456,7 +847,6 @@ window.submitWithdrawal = async () => {
 
     if(isNaN(amount) || amount <= 0) return window.showPopup("Attention", "Montant de retrait invalide.", true);
     
-    // Validations par formulaire
     if(method === "direct" && !phone) return window.showPopup("Attention", "Veuillez entrer votre numéro Mobile Money.", true);
     if(method === "brainy" && (!phone || !fullName)) return window.showPopup("Attention", "Veuillez remplir tous les champs (Nom et Numéro).", true);
     if(method === "moneyfusion") {
@@ -467,7 +857,6 @@ window.submitWithdrawal = async () => {
     const snap = await getDoc(doc(db,"users",currentUser.uid));
     const userData = snap.data();
     
-    // Conditions strictes sur le solde
     if(amount > userData.balance) return window.showPopup("Attention", "Votre solde est insuffisant pour effectuer ce retrait.", true);
     if((userData.balance - amount) < 150) return window.showPopup("Refusé", "Après le retrait, il doit obligatoirement vous rester au minimum 150 FCFA sur votre compte.", true);
 
@@ -490,57 +879,12 @@ window.submitWithdrawal = async () => {
 };
 /* --- FIN SCRIPTS GESTION RETRAITS --- */
 
-window.buyAction = async () => {
-    if(!currentUser) return;
-    const name = document.getElementById("actionName").value.trim();
-    const stake = parseInt(document.getElementById("actionStake").value);
-    const timeStr = document.getElementById("actionTime").value;
-
-    if (!name) return window.showPopup("Attention", "Veuillez donner un nom à votre action", true);
-    if (isNaN(stake) || stake <= 0) return window.showPopup("Attention", "Mise invalide", true);
-
-    if(stake >= 5001 && timeStr === "7 Jours") return window.showPopup("Refusé", "La durée de 7 jours est limitée à 5000F maximum.", true);
-    if(stake >= 15001 && timeStr === "30 Jours") return window.showPopup("Refusé", "La durée de 30 jours est limitée à 15000F maximum.", true);
-    if(stake >= 25001 && timeStr === "2 Mois") return window.showPopup("Refusé", "La durée de 2 mois est limitée à 25000F maximum.", true);
-    if(stake >= 35001 && timeStr === "4 Mois") return window.showPopup("Refusé", "La durée de 4 mois est limitée à 35000F maximum.", true);
-    if(stake >= 40001 && timeStr === "6 Mois") return window.showPopup("Refusé", "La durée de 6 mois est limitée à 40000F maximum.", true);
-    if(stake >= 50001 && timeStr === "7 Mois") return window.showPopup("Refusé", "La durée de 7 mois est limitée à 50000F maximum.", true);
-    if(stake >= 55001 && timeStr === "9 Mois") return window.showPopup("Refusé", "La durée de 9 mois est limitée à 55000F maximum.", true);
-
-    const snap = await getDoc(doc(db,"users",currentUser.uid));
-    let userData = snap.data();
-    if (userData.balance < stake) return window.showPopup("Attention", "Solde insuffisant pour acheter cette action.", true);
-
-    const newAction = {
-        name: name,
-        stake: stake,
-        time: timeStr,
-        status: "en attente",
-        date: new Date().toISOString(),
-        expiryDate: null,
-        isPaid: false
-    };
-
-    await updateDoc(doc(db,"users",currentUser.uid), { 
-        actions: arrayUnion(newAction),
-        history: arrayUnion({date: new Date().toISOString(), type: 'Achat Action', amount: 0, desc: `Attente: ${name}`})
-    });
-    
-    window.showPopup("Succès", "Action achetée et en attente de validation de l'administrateur.", false);
-    
-    document.getElementById("actionName").value = "";
-    document.getElementById("actionStake").value = "";
-    
-    userData.actions.push(newAction);
-    window.renderClientActions(userData.actions);
-};
-
 window.loadAnnouncements = () => {
     const q = query(collection(db, "announcements"), orderBy("date", "desc"));
     onSnapshot(q, (snapshot) => {
         const display = document.getElementById("announcementsDisplay");
         if (snapshot.empty) {
-            display.innerHTML = "<i>Aucune annonce n'a été publiée pour le moment.</i>";
+            display.innerHTML = "<div style='text-align:center; padding:20px;'><i>Aucune annonce n'a été publiée pour le moment.</i></div>";
             return;
         }
         let html = "";
@@ -548,10 +892,12 @@ window.loadAnnouncements = () => {
             const ann = docSnap.data();
             let dateStr = new Date(ann.date).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
             html += `
-                <div style="background: white; padding: 12px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <strong style="color: #333; font-size: 14px;">${ann.title}</strong>
-                    <span style="font-size: 10px; color: #888; float: right;">${dateStr}</span>
-                    <div style="margin-top: 8px; font-size: 13px; color: #555; white-space: pre-wrap;">${ann.message}</div>
+                <div style="background: white; padding: 18px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <strong style="color: var(--text-main); font-size: 15px;">${ann.title}</strong>
+                        <span style="font-size: 11px; color: var(--text-muted); background: #f1f5f9; padding: 4px 8px; border-radius: 20px;">${dateStr}</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-muted); white-space: pre-wrap; line-height:1.6;">${ann.message}</div>
                 </div>
             `;
         });
@@ -560,7 +906,12 @@ window.loadAnnouncements = () => {
 };
 
 window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
-window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").textContent=msg; document.getElementById("customPopup").classList.add("show"); };
+window.showPopup = (title, msg, err=false) => { 
+    document.getElementById("popupTitle").textContent=title; 
+    document.getElementById("popupTitle").style.color=err?"var(--accent-red)":"var(--text-main)"; 
+    document.getElementById("popupMessage").textContent=msg; 
+    document.getElementById("customPopup").classList.add("show"); 
+};
 window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
 
 function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser.uid}_${k}`) || "0"); }
@@ -570,77 +921,23 @@ window.updateBadges = () => {
   const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif"));
   const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
   const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
-  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "block" : "none"; }
-  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "block" : "none"; }
+  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "flex" : "none"; }
+  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "flex" : "none"; }
 };
 
 window.openNotifPopup = () => {
   const l = document.getElementById("notifPopupList");
-  l.innerHTML = window._clientNotifications.length === 0 ? "<i>Aucune notification.</i>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
+  l.innerHTML = window._clientNotifications.length === 0 ? "<div style='text-align:center; padding:20px; color:#64748b;'><i>Aucune notification.</i></div>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:12px; margin-bottom:5px; opacity:0.8; font-weight:600;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
   document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
 };
 window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
 
 window.openHistoryPopup = () => {
   const l = document.getElementById("histPopupList");
-  l.innerHTML = window._clientHistory.length === 0 ? "<i>Aucune transaction.</i>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
+  l.innerHTML = window._clientHistory.length === 0 ? "<div style='text-align:center; padding:20px; color:#64748b;'><i>Aucune transaction.</i></div>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong style="font-size:14px;">${h.type}</strong><br><span style="font-size:12px; color:var(--text-muted); display:inline-block; margin-top:4px;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
   document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
 };
 window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
-
-window.renderClientActions = (actionsArray) => {
-  const list = document.getElementById("clientActionsList"); 
-  timersIntervals.forEach(clearInterval); 
-  if(!list) return;
-  if(actionsArray.length === 0) return list.innerHTML = "<i>Aucune action.</i>";
-  list.innerHTML = actionsArray.map((act, i) => {
-    let col = act.status === "validé" ? "green" : (act.status === "rejeté" ? "red" : (act.status === "terminé" ? "#28a745" : "orange"));
-    let statusText = act.status === "terminé" ? "Payé & Terminé" : act.status;
-    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;"><strong>${act.name}</strong> - ${act.stake} FCFA<span style="float:right; color:${col}; font-weight:bold;">${statusText}</span>${act.status==="validé"?`<span class="timer" id="timer-${i}"></span>`:''}</div>`;
-  }).join("");
-  
-  actionsArray.forEach((act, i) => { 
-      if(act.status === "validé" && act.expiryDate) {
-          startTimer(act.expiryDate, `timer-${i}`); 
-      }
-  });
-};
-
-window.renderClientTrades = (tradesArray) => {
-  const list = document.getElementById("clientTradesList");
-  if(!list) return;
-  if(tradesArray.length === 0) return list.innerHTML = "<i>Aucun trade en cours.</i>";
-  
-  let activeTrades = tradesArray.filter(t => t.status === "en cours");
-  if(activeTrades.length === 0) return list.innerHTML = "<i>Aucun trade actif actuellement.</i>";
-
-  list.innerHTML = activeTrades.map((t, i) => {
-    let predictionText = t.prediction === 'above' ? 'Au-dessus de' : (t.prediction === 'below' ? 'En dessous de' : 'Égal à');
-    return `<div style="padding: 10px 0; border-bottom: 1px dashed #ccc; text-align:left;">
-      <strong style="color:#17a2b8;">Mise : ${t.stake} FCFA</strong>
-      <div style="font-size: 12px; color: #555; margin-top: 3px;">Cible : ${predictionText} ${t.target}</div>
-      <span style="color:orange; font-weight:bold; font-size:12px;">${t.status}</span>
-    </div>`;
-  }).join("");
-};
-
-function startTimer(expStr, id) {
-    const target = new Date(expStr).getTime();
-    const f = setInterval(() => {
-        const diff = target - new Date().getTime(); 
-        const el = document.getElementById(id);
-        if(!el) return clearInterval(f);
-        
-        if (diff <= 0) { 
-            el.textContent = "Validation des gains en cours..."; 
-            el.style.color = "green"; 
-            clearInterval(f); 
-        } else { 
-            el.textContent = `Temps restant: ${Math.floor(diff/(1000*60*60*24))}j ${Math.floor((diff%(1000*60*60*24))/(1000*60*60))}h ${Math.floor((diff%(1000*60*60))/(1000*60))}m ${Math.floor((diff%(1000*60))/1000)}s`; 
-        }
-    }, 1000); 
-    timersIntervals.push(f);
-}
 </script>
 </body>
 </html>
