@@ -147,6 +147,21 @@ body { background: var(--bg-color); color: #333; padding-bottom: 50px; }
 .btn-retraits { background: linear-gradient(135deg, #dc3545, #c82333); }
 .btn-boutique { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
 
+/* --- NOUVEAUTÉS ADMIN ACTIONS (AJOUTÉES SANS TOUCHER AU RESTE) --- */
+.btn-add-action { background: linear-gradient(135deg, #28a745, #218838); }
+.btn-manage-actions { background: linear-gradient(135deg, #fd7e14, #e8590c); }
+.btn-stats-actions { background: linear-gradient(135deg, #007bff, #0056b3); }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark); font-size: 14px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; }
+.btn-submit { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
+.btn-submit:hover { background: #0056b3; }
+.btn-edit { background: var(--warning); color: #333; }
+.btn-edit:hover { background: #e0a800; }
+.btn-delete { background: var(--danger); color: white; }
+.btn-delete:hover { background: #c82333; }
+
 /* --- POPUPS (MODALS) --- */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -231,11 +246,17 @@ body { background: var(--bg-color); color: #333; padding-bottom: 50px; }
       </div>
     </div>
 
+    <!-- AJOUT DES NOUVEAUX BOUTONS DANS LA GRILLE EXISTANTE -->
     <div class="action-buttons-grid">
       <button class="btn-panel btn-actions-cours" onclick="openModal('modal-actions-cours')">⚙️ Actions en cours</button>
       <button class="btn-panel btn-actions-attente" onclick="openModal('modal-actions-attente')">📋 Actions en attente</button>
       <button class="btn-panel btn-retraits" onclick="openModal('modal-retraits')">⏳ Retraits demandés</button>
       <button class="btn-panel btn-boutique" onclick="openModal('modal-commandes')">🛍️ Commandes produits</button>
+      
+      <!-- Nouveaux boutons Admin Actions -->
+      <button class="btn-panel btn-add-action" onclick="openModal('modal-add-action')">➕ Ajouter une action</button>
+      <button class="btn-panel btn-manage-actions" onclick="openModal('modal-manage-actions')">📝 Actions ajoutées</button>
+      <button class="btn-panel btn-stats-actions" onclick="openModal('modal-stats-actions')">📊 Stats des actions</button>
     </div>
 
     <!-- NOUVEAU : TABLEAU DE BORD AVANCÉ -->
@@ -265,6 +286,7 @@ body { background: var(--bg-color); color: #333; padding-bottom: 50px; }
   </div>
 </div>
 
+<!-- POPUPS EXISTANTS -->
 <div class="modal-overlay" id="modal-actions-cours">
   <div class="modal-content">
     <div class="modal-header" style="background: var(--info);">
@@ -305,10 +327,128 @@ body { background: var(--bg-color); color: #333; padding-bottom: 50px; }
   </div>
 </div>
 
+<!-- NOUVEAUX POPUPS ADMIN ACTIONS -->
+<!-- 1. Ajouter une action -->
+<div class="modal-overlay" id="modal-add-action">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--success);">
+      <h3>➕ Créer une nouvelle action</h3>
+      <button onclick="closeModal('modal-add-action')">✖</button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <label>Nom du plan d'action</label>
+            <input type="text" id="add-action-name" placeholder="ex: Plan Premium">
+        </div>
+        <div class="form-group">
+            <label>Description (Facultative)</label>
+            <textarea id="add-action-desc" rows="3" placeholder="Avantages de ce plan..."></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+                <label>Mise minimum (FCFA)</label>
+                <input type="number" id="add-action-min" placeholder="ex: 1000">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Mise maximum (FCFA)</label>
+                <input type="number" id="add-action-max" placeholder="ex: 50000">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Durée (Texte exact)</label>
+            <input type="text" id="add-action-duration" placeholder="ex: 7 Jours, 1 Mois, 2 Mois...">
+        </div>
+        <div class="form-group">
+            <label>Bénéfice à terme (%)</label>
+            <input type="number" id="add-action-profit" placeholder="ex: 20">
+        </div>
+        <div class="form-group">
+            <label>Statut d'affichage</label>
+            <select id="add-action-status">
+                <option value="active">Active (Visible par les clients)</option>
+                <option value="désactivée">Désactivée (Cachée)</option>
+            </select>
+        </div>
+        <button class="btn-submit" onclick="submitAddAction()">Enregistrer et Publier l'action</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Actions ajoutées (Gestion) -->
+<div class="modal-overlay" id="modal-manage-actions">
+  <div class="modal-content">
+    <div class="modal-header" style="background: #fd7e14;">
+      <h3>📝 Gestion des actions créées</h3>
+      <button onclick="closeModal('modal-manage-actions')">✖</button>
+    </div>
+    <div class="modal-body" id="list-system-actions">Chargement...</div>
+  </div>
+</div>
+
+<!-- 3. Modification d'une action -->
+<div class="modal-overlay" id="modal-edit-action">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--warning); color: #333;">
+      <h3>✏️ Modifier l'action</h3>
+      <button onclick="closeModal('modal-edit-action')" style="color: #333;">✖</button>
+    </div>
+    <div class="modal-body">
+        <input type="hidden" id="edit-action-id">
+        <div class="form-group">
+            <label>Nom du plan d'action</label>
+            <input type="text" id="edit-action-name">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="edit-action-desc" rows="3"></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+                <label>Mise minimum (FCFA)</label>
+                <input type="number" id="edit-action-min">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Mise maximum (FCFA)</label>
+                <input type="number" id="edit-action-max">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Durée</label>
+            <input type="text" id="edit-action-duration">
+        </div>
+        <div class="form-group">
+            <label>Bénéfice (%)</label>
+            <input type="number" id="edit-action-profit">
+        </div>
+        <div class="form-group">
+            <label>Statut d'affichage</label>
+            <select id="edit-action-status">
+                <option value="active">Active</option>
+                <option value="désactivée">Désactivée</option>
+            </select>
+        </div>
+        <button class="btn-submit" onclick="submitEditAction()">Mettre à jour l'action</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Statistiques des Actions -->
+<div class="modal-overlay" id="modal-stats-actions">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--primary);">
+      <h3>📊 Statistiques par Action</h3>
+      <button onclick="closeModal('modal-stats-actions')">✖</button>
+    </div>
+    <div class="modal-body" id="list-stats-actions">Chargement...</div>
+  </div>
+</div>
+
+
 <script type="module">
+// AJOUT de addDoc et deleteDoc aux imports existants (sans casser l'existant)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, query, where, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 // Configuration Firebase
 const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
@@ -318,6 +458,7 @@ const db = getFirestore(app);
 
 let allUsers = [];
 let allOrders = [];
+let allSystemActions = []; // NOUVELLE VARIABLE pour stocker les actions système
 let timers = [];
 
 // Vérification Admin
@@ -361,7 +502,7 @@ function getExpiryDate(timeStr) {
     return expiry.toISOString();
 }
 
-// Charger toutes les données
+// Charger toutes les données (Mise à jour pour inclure system_actions)
 async function loadData() {
     document.getElementById("loader").classList.remove("hidden");
     document.getElementById("main-content").classList.add("hidden");
@@ -376,11 +517,20 @@ async function loadData() {
     allOrders = [];
     ordersSnap.forEach(doc => allOrders.push({ id: doc.id, ...doc.data() }));
 
+    // NOUVEAU : Récupérer les actions créées par l'admin
+    const sysActionsSnap = await getDocs(collection(db, "system_actions"));
+    allSystemActions = [];
+    sysActionsSnap.forEach(doc => allSystemActions.push({ id: doc.id, ...doc.data() }));
+
     updateDashboard();
     renderActionsCours();
     renderActionsAttente();
     renderRetraits();
     renderCommandes();
+    
+    // NOUVEAU : Rendu des modals admin actions
+    renderManageActions();
+    renderStatsActions();
     
     // Mise à jour initiale du tableau de bord avancé
     window.updateAdvancedDashboard();
@@ -401,7 +551,9 @@ function updateDashboard() {
                 if (act.status === "validé" && !act.isPaid) {
                     actionsCount++;
                     totalInvested += act.stake;
-                    let profit = (act.stake * getProfitPercent(act.time)) / 100;
+                    // Léger ajout dynamique : si l'action a son propre profitPct, on l'utilise, sinon on utilise l'ancien système (rétrocompatibilité)
+                    let pct = act.profitPct !== undefined ? act.profitPct : getProfitPercent(act.time);
+                    let profit = (act.stake * pct) / 100;
                     totalToPay += (act.stake + profit);
                 }
             });
@@ -413,7 +565,7 @@ function updateDashboard() {
     document.getElementById("stat-to-pay").textContent = totalToPay.toLocaleString('fr-FR') + " FCFA";
 }
 
-// NOUVEAU : Écouteur pour afficher le nom du bénéficiaire en temps réel (Dépôt)
+// Écouteur pour afficher le nom du bénéficiaire en temps réel (Dépôt)
 document.getElementById("dep-email").addEventListener("input", (e) => {
     const email = e.target.value.trim().toLowerCase();
     const nameEl = document.getElementById("dep-user-name");
@@ -423,7 +575,6 @@ document.getElementById("dep-email").addEventListener("input", (e) => {
         return;
     }
     
-    // Recherche rapide dans la mémoire déjà chargée
     const user = allUsers.find(u => u.email && u.email.toLowerCase() === email);
     if (user) {
         nameEl.textContent = "✅ Bénéficiaire trouvé : " + user.fullName;
@@ -477,7 +628,7 @@ window.processDeposit = async () => {
     }
 };
 
-// NOUVEAU : Logique de filtrage des dates pour les stats avancées
+// Logique de filtrage des dates pour les stats avancées
 function isWithinPeriod(dateStr, period) {
     if (period === 'all') return true;
     if (!dateStr) return false; 
@@ -499,7 +650,7 @@ function isWithinPeriod(dateStr, period) {
     return true;
 }
 
-// NOUVEAU : Mise à jour du Tableau Récapitulatif Avancé
+// Mise à jour du Tableau Récapitulatif Avancé
 window.updateAdvancedDashboard = () => {
     let stats = {
         totalActionStake: 0,
@@ -529,7 +680,9 @@ window.updateAdvancedDashboard = () => {
                     } else if (act.status === "validé" && act.isPaid) {
                         stats.countCompletedActions++;
                         stats.totalActionStake += (act.stake || 0);
-                        let profit = ((act.stake || 0) * getProfitPercent(act.time)) / 100;
+                        // Rétrocompatibilité profit dynamique
+                        let pct = act.profitPct !== undefined ? act.profitPct : getProfitPercent(act.time);
+                        let profit = ((act.stake || 0) * pct) / 100;
                         stats.totalActionRefunds += ((act.stake || 0) + profit);
                     } else if (act.status === "en attente") {
                         stats.countPendingActions++;
@@ -595,7 +748,9 @@ function renderActionsCours() {
                     let start = act.validationDate ? new Date(act.validationDate).toLocaleDateString('fr-FR') : "N/A";
                     let end = act.expiryDate ? new Date(act.expiryDate).toLocaleDateString('fr-FR') : "N/A";
                     let timerId = `timer-${user.id}-${idx}`;
-                    let profit = (act.stake * getProfitPercent(act.time)) / 100;
+                    // Rétrocompatibilité profit dynamique
+                    let pct = act.profitPct !== undefined ? act.profitPct : getProfitPercent(act.time);
+                    let profit = (act.stake * pct) / 100;
                     
                     html += `
                         <div class="list-item">
@@ -757,9 +912,8 @@ function renderCommandes() {
     container.innerHTML = html || "<p style='text-align:center;'>Aucune commande en attente.</p>";
 }
 
-// --- FONCTIONS LOGIQUES (Exactement la même logique que les fichiers existants) ---
+// --- FONCTIONS LOGIQUES DE BASE ---
 
-// Actions
 window.validateAction = async (uid, idx, stake, time, name) => {
     if(!confirm(`Valider l'action de ${stake} FCFA ?`)) return;
     const user = allUsers.find(u => u.id === uid);
@@ -796,12 +950,9 @@ window.rejectAction = async (uid, idx, name) => {
     await loadData();
 };
 
-// Retraits
 window.validateWithdraw = async (uid, idx, amount) => {
     if(!confirm(`Déduire définitivement ${amount} FCFA du compte de ce client et valider le retrait ?`)) return;
     const user = allUsers.find(u => u.id === uid);
-    
-    // Le solde n'a pas encore été débité (logique BW existante)
     if(user.balance < amount) return alert("Solde insuffisant pour ce retrait.");
 
     user.balance -= amount;
@@ -833,7 +984,6 @@ window.rejectWithdraw = async (uid, idx, amount) => {
     await loadData();
 };
 
-// Commandes
 window.acceptOrder = async (orderId) => {
     if(!confirm("Marquer cette commande comme livrée ?")) return;
     await updateDoc(doc(db, "orders", orderId), { status: "Livrée" });
@@ -848,7 +998,185 @@ window.rejectOrder = async (orderId) => {
     await loadData();
 };
 
-// --- GESTION DES MODALS ---
+
+// =====================================================================
+// NOUVELLES FONCTIONS : GESTION DES ACTIONS DYNAMIQUES (SANS CASSER L'EXISTANT)
+// =====================================================================
+
+// 1. Ajouter une action
+window.submitAddAction = async () => {
+    const name = document.getElementById("add-action-name").value.trim();
+    const description = document.getElementById("add-action-desc").value.trim();
+    const minAmount = parseInt(document.getElementById("add-action-min").value);
+    const maxAmount = parseInt(document.getElementById("add-action-max").value);
+    const durationStr = document.getElementById("add-action-duration").value.trim();
+    const profitPct = parseFloat(document.getElementById("add-action-profit").value);
+    const status = document.getElementById("add-action-status").value;
+
+    if(!name || isNaN(minAmount) || isNaN(maxAmount) || !durationStr || isNaN(profitPct)) {
+        return alert("Veuillez remplir tous les champs obligatoires correctement.");
+    }
+
+    try {
+        await addDoc(collection(db, "system_actions"), {
+            name, description, minAmount, maxAmount, durationStr, profitPct, status
+        });
+        
+        alert("Action ajoutée et publiée avec succès !");
+        closeModal('modal-add-action');
+        
+        // Vider les champs
+        document.getElementById("add-action-name").value = "";
+        document.getElementById("add-action-desc").value = "";
+        document.getElementById("add-action-min").value = "";
+        document.getElementById("add-action-max").value = "";
+        document.getElementById("add-action-duration").value = "";
+        document.getElementById("add-action-profit").value = "";
+        
+        await loadData(); // Rafraîchir
+    } catch (error) {
+        alert("Erreur lors de la création de l'action: " + error.message);
+    }
+};
+
+// 2. Afficher la liste des actions créées pour gestion
+function renderManageActions() {
+    const container = document.getElementById("list-system-actions");
+    let html = "";
+    
+    allSystemActions.forEach(act => {
+        let badgeColor = act.status === 'active' ? 'var(--success)' : 'var(--danger)';
+        html += `
+            <div class="list-item">
+                <div class="item-header">
+                    <strong>${act.name}</strong>
+                    <span class="item-badge" style="background:${badgeColor};">${act.status.toUpperCase()}</span>
+                </div>
+                <div class="item-details">
+                    <div><strong>Durée:</strong> ${act.durationStr}</div>
+                    <div><strong>Bénéfice:</strong> +${act.profitPct}%</div>
+                    <div><strong>Mise autorisée:</strong> ${act.minAmount.toLocaleString('fr-FR')} - ${act.maxAmount.toLocaleString('fr-FR')} F</div>
+                    <div style="grid-column: 1/-1;"><strong>Description:</strong> ${act.description || "Aucune description"}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-edit" onclick="openEditAction('${act.id}')">Modifier</button>
+                    <button class="btn-delete" onclick="deleteSystemAction('${act.id}')">Supprimer</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune action n'a encore été ajoutée au système.</p>";
+}
+
+// 3. Ouvrir le modal de modification
+window.openEditAction = (id) => {
+    const act = allSystemActions.find(a => a.id === id);
+    if(!act) return;
+    
+    document.getElementById("edit-action-id").value = act.id;
+    document.getElementById("edit-action-name").value = act.name;
+    document.getElementById("edit-action-desc").value = act.description || "";
+    document.getElementById("edit-action-min").value = act.minAmount;
+    document.getElementById("edit-action-max").value = act.maxAmount;
+    document.getElementById("edit-action-duration").value = act.durationStr;
+    document.getElementById("edit-action-profit").value = act.profitPct;
+    document.getElementById("edit-action-status").value = act.status;
+    
+    openModal("modal-edit-action");
+};
+
+// 4. Enregistrer la modification
+window.submitEditAction = async () => {
+    const id = document.getElementById("edit-action-id").value;
+    const name = document.getElementById("edit-action-name").value.trim();
+    const description = document.getElementById("edit-action-desc").value.trim();
+    const minAmount = parseInt(document.getElementById("edit-action-min").value);
+    const maxAmount = parseInt(document.getElementById("edit-action-max").value);
+    const durationStr = document.getElementById("edit-action-duration").value.trim();
+    const profitPct = parseFloat(document.getElementById("edit-action-profit").value);
+    const status = document.getElementById("edit-action-status").value;
+
+    if(!name || isNaN(minAmount) || isNaN(maxAmount) || !durationStr || isNaN(profitPct)) {
+        return alert("Veuillez remplir tous les champs obligatoires correctement.");
+    }
+
+    try {
+        await updateDoc(doc(db, "system_actions", id), {
+            name, description, minAmount, maxAmount, durationStr, profitPct, status
+        });
+        
+        alert("Modifications enregistrées avec succès !");
+        closeModal('modal-edit-action');
+        await loadData();
+    } catch (error) {
+        alert("Erreur lors de la mise à jour: " + error.message);
+    }
+};
+
+// 5. Supprimer une action
+window.deleteSystemAction = async (id) => {
+    if(!confirm("Attention : Êtes-vous sûr de vouloir supprimer cette action définitivement de la page client ? (Les clients qui ont déjà acheté cette action ne seront pas affectés).")) return;
+    try {
+        await deleteDoc(doc(db, "system_actions", id));
+        alert("Action supprimée du système.");
+        await loadData();
+    } catch (error) {
+        alert("Erreur lors de la suppression: " + error.message);
+    }
+};
+
+// 6. Afficher les statistiques de chaque Action système
+function renderStatsActions() {
+    const container = document.getElementById("list-stats-actions");
+    let html = "";
+    
+    allSystemActions.forEach(sysAct => {
+        let countOngoing = 0;
+        let countCompleted = 0;
+        let totalStaked = 0;
+        let totalProfit = 0;
+
+        allUsers.forEach(user => {
+            if (user.actions) {
+                user.actions.forEach(userAct => {
+                    // Vérification croisée (Durée & Profit) pour faire le lien entre l'historique utilisateur et l'action système
+                    let actPct = userAct.profitPct !== undefined ? userAct.profitPct : getProfitPercent(userAct.time);
+                    
+                    if (userAct.time === sysAct.durationStr && actPct === sysAct.profitPct) {
+                        if (userAct.status === "validé" && !userAct.isPaid) {
+                            countOngoing++;
+                            totalStaked += userAct.stake;
+                        } else if (userAct.status === "terminé" || (userAct.status === "validé" && userAct.isPaid)) {
+                            countCompleted++;
+                            totalStaked += userAct.stake;
+                            totalProfit += (userAct.stake * actPct) / 100;
+                        }
+                    }
+                });
+            }
+        });
+
+        html += `
+            <div class="list-item">
+                <div class="item-header">
+                    <strong style="font-size:18px;">${sysAct.name}</strong>
+                    <span class="item-badge" style="background:var(--primary);">${sysAct.status.toUpperCase()}</span>
+                </div>
+                <div class="item-details" style="grid-template-columns: repeat(2, 1fr); margin-top:5px; padding: 10px; background:var(--bg-color); border-radius:8px;">
+                    <div><strong>Participations en cours:</strong> <span style="font-size:16px; font-weight:bold; color:var(--info);">${countOngoing}</span></div>
+                    <div><strong>Participations terminées:</strong> <span style="font-size:16px; font-weight:bold; color:var(--success);">${countCompleted}</span></div>
+                    <div><strong>Montant Total Misé:</strong> <br><span style="font-size:16px; font-weight:bold; color:var(--dark);">${totalStaked.toLocaleString('fr-FR')} FCFA</span></div>
+                    <div><strong>Bénéfices Distribués:</strong> <br><span style="font-size:16px; font-weight:bold; color:var(--purple);">${totalProfit.toLocaleString('fr-FR')} FCFA</span></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune action n'a été trouvée pour générer des statistiques.</p>";
+}
+
+// --- GESTION DES MODALS (Existantes) ---
 window.openModal = (id) => { document.getElementById(id).classList.add('active'); }
 window.closeModal = (id) => { document.getElementById(id).classList.remove('active'); }
 
