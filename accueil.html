@@ -347,7 +347,9 @@ input:focus, select:focus { border-color: var(--accent-blue); background: #fff; 
     </div>
 </div>
 
-<!-- Popup Transfert -->
+
+
+<!-- Popup Transfert 
 <div id="transferPopup" class="popup-overlay">
     <div class="popup-content">
         <div class="popup-header header-blue">
@@ -365,7 +367,11 @@ input:focus, select:focus { border-color: var(--accent-blue); background: #fff; 
             <button onclick="submitTransfer()" class="btn-primary" style="margin-top:15px;">Envoyer les fonds</button>
         </div>
     </div>
-</div>
+</div> 
+-->
+
+
+
 
 <!-- Popup Dépôt -->
 <div id="depositPopup" class="popup-overlay">
@@ -552,7 +558,7 @@ onAuthStateChanged(auth, async (user) => {
             initSupportChat(user.uid);
         }
     } else {
-        window.location.href = "login.html";
+        window.location.href = "principal.html";
     }
 });
 
@@ -905,7 +911,7 @@ window.loadAnnouncements = () => {
     });
 };
 
-window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
+window.logout = () => signOut(auth).then(()=> window.location.href="principal.html");
 window.showPopup = (title, msg, err=false) => { 
     document.getElementById("popupTitle").textContent=title; 
     document.getElementById("popupTitle").style.color=err?"var(--accent-red)":"var(--text-main)"; 
