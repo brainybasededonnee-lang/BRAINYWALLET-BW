@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://*.firebaseapp.com https://*.firebaseio.com https://www.gstatic.com; frame-src 'self'; connect-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://*.googleapis.com; img-src 'self' data: https:;">
+    
     <title>Brainy Wallet - Application</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +15,7 @@
         /* --- RESET ET STRUCTURE DE BASE --- */
         * {
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; /* Supprime le flash bleu au clic sur mobile */
+            -webkit-tap-highlight-color: transparent; 
         }
         
         body, html {
@@ -19,7 +23,7 @@
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Empêche le scroll sur la page principale */
+            overflow: hidden; 
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: #f0f6ff;
         }
@@ -27,7 +31,6 @@
         /* --- ZONE DE CONTENU (IFRAME) --- */
         #app-frame {
             width: 100%;
-            /* La hauteur prend tout l'écran moins la hauteur de la barre de navigation (65px) */
             height: calc(100% - 65px);
             border: none;
             display: block;
@@ -40,14 +43,13 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 65px; /* Hauteur de base */
+            height: 65px; 
             background: #ffffff;
             box-shadow: 0 -2px 15px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 9999;
-            /* Padding dynamique pour les écrans sans bordures (ex: iPhone X et +) */
             padding-bottom: env(safe-area-inset-bottom); 
         }
 
@@ -62,7 +64,7 @@
             width: 100%;
             height: 100%;
             transition: all 0.3s ease;
-            user-select: none; /* Empêche la sélection du texte au double clic */
+            user-select: none; 
         }
 
         .nav-item i {
@@ -82,62 +84,162 @@
         }
 
         .nav-item.active i {
-            transform: translateY(-2px) scale(1.1); /* Petit effet de soulèvement */
+            transform: translateY(-2px) scale(1.1); 
             color: #007bff;
         }
 
     </style>
 </head>
 <body>
-
-    <iframe id="app-frame" src="accueil.html"></iframe>
+    <iframe id="app-frame"></iframe>
 
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="navigate('accueil.html', this)">
+        
+        <div class="nav-item active" data-pid="k_h1x9">
             <i class="fa-solid fa-house"></i>
-            <span>Accueil</span>
+            <span>Home</span>
         </div>
         
-        <div class="nav-item" onclick="navigate('action.html', this)">
+        <div class="nav-item" data-pid="k_a2y8">
             <i class="fa-solid fa-chart-line"></i>
-            <span>Actions</span>
+            <span>Deals</span>
         </div>
         
-		 <div class="nav-item" onclick="navigate('boutique.html', this)">
+		 <div class="nav-item" data-pid="k_s3z7">
             <i class="fa-solid fa-store"></i>
-            <span>Boutique</span>
+            <span>Store</span>
         </div>
 		
-        <div class="nav-item" onclick="navigate('trading.html', this)">
+        <div class="nav-item" data-pid="k_t4w6">
             <i class="fa-solid fa-chart-candlestick"></i>
-            <span>Trading</span>
+            <span>Trade </span>
         </div>
         
-        <div class="nav-item" onclick="navigate('crash.html', this)">
+        <div class="nav-item" data-pid="k_c5v5">
             <i class="fa-solid fa-rocket"></i>
-            <span>Crash</span>
+            <span>Rush </span>
         </div>
         
-        <div class="nav-item" onclick="navigate('jeu.html', this)">
+        <div class="nav-item" data-pid="k_j6u4">
             <i class="fa-solid fa-gift"></i>
-            <span>Tombola</span>
+            <span>Tirage</span>
         </div>
     </nav>
 
     <script>
-        function navigate(page, element) {
-            // 1. Changer la source de l'iframe
-            document.getElementById('app-frame').src = page;
+       
+        (function() {
+            'use strict';
+
+            const _r = {
+                'k_h1x9': '6163637565696c2e68746d6c', 
+                'k_a2y8': '616374696f6e2e68746d6c', 
+                'k_s3z7': '626f7574697175652e68746d6c',
+                'k_t4w6': '74726164696e672e68746d6c',
+                'k_c5v5': '63726173682e68746d6c', 
+                'k_j6u4': '6a65752e68746d6c' 
+            };
+
+   
+            const _dH = (h) => {
+                let s = '';
+                for (let i = 0; i < h.length; i += 2) {
+                    s += String.fromCharCode(parseInt(h.substr(i, 2), 16));
+                }
+                return s;
+            };
+
+      
+            const _allowedList = Object.values(_r).map(h => _dH(h));
+
+     
+            const _nodeMap = new WeakMap();
+            let _suspiciousActivity = 0;
+
+            function initNav() {
+                const navItems = document.querySelectorAll('.nav-item');
+                const iframe = document.getElementById('app-frame');
+
+   
+                iframe.src = _dH(_r['k_h1x9']);
+
+                navItems.forEach(item => {
+                    const pid = item.getAttribute('data-pid');
+                    if (pid && _r[pid]) {
+           
+                        _nodeMap.set(item, pid);
+                        
+              
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            _processNav(this, iframe);
+                        });
+                    }
+                });
+            }
+
+            function _processNav(element, iframe) {
+                const currentPid = element.getAttribute('data-pid');
+                const originalPid = _nodeMap.get(element);
+
             
-            // 2. Retirer la classe 'active' de tous les boutons
-            const items = document.querySelectorAll('.nav-item');
-            items.forEach(item => {
-                item.classList.remove('active');
-            });
+                if (!originalPid || currentPid !== originalPid) {
+                    _flag("Modification structurelle détectée");
+                    return;
+                }
+
+                const encodedDest = _r[originalPid];
+                if (!encodedDest) {
+                    _flag("Identifiant de route invalide");
+                    return;
+                }
+
+                const dest = _dH(encodedDest);
+
+           
+                if (!_isSafe(dest)) {
+                    _flag("Tentative de navigation hors liste blanche");
+                    return;
+                }
+
+           
+                iframe.src = dest;
+
+        
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                element.classList.add('active');
+            }
+
+            function _isSafe(dest) {
             
-            // 3. Ajouter la classe 'active' au bouton cliqué
-            element.classList.add('active');
-        }
+                if (!_allowedList.includes(dest)) return false;
+                
+           
+                const forbiddenProtocols = /^(http|https|javascript|data|vbscript|file):/i;
+                const pathTraversal = /(\.\.\/|\.\/)/;
+                
+                if (forbiddenProtocols.test(dest) || pathTraversal.test(dest)) return false;
+
+                return true;
+            }
+
+            function _flag(reason) {
+                _suspiciousActivity++;
+                console.warn("[Système Sécurisé] Action ignorée : " + reason);
+                
+                if (_suspiciousActivity >= 3) {
+                    alert("Alerte de sécurité : Activité anormale de navigation détectée. L'action a été bloquée.");
+                    _suspiciousActivity = 0; 
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initNav);
+            } else {
+                initNav();
+            }
+
+        })();
     </script>
 
 </body>
