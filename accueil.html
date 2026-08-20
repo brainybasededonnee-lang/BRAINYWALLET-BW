@@ -39,7 +39,7 @@ body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: white;
     border-radius: var(--border-radius-lg);
-    padding: 30px;
+    padding: 22px 30px;
     box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
     position: relative;
     overflow: hidden;
@@ -50,7 +50,7 @@ body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -
     border-radius: 50%; pointer-events: none;
 }
 
-.wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .user-greeting { font-size: 18px; font-weight: 500; opacity: 0.9; display: flex; align-items: center; gap: 10px; }
 .user-greeting img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
 
@@ -68,14 +68,14 @@ body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -
     display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.balance-section { margin-bottom: 30px; }
+.balance-section { margin-bottom: 20px; }
 .label { font-size: 14px; opacity: 0.8; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 .amount { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
 
 /* Glassmorphism Affiliate Box */
 .affiliate-stats {
     background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--border-radius-md); padding: 15px; margin-bottom: 30px;
+    border-radius: var(--border-radius-md); padding: 12px; margin-bottom: 20px;
     display: flex; justify-content: space-between; align-items: center;
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
@@ -85,7 +85,7 @@ body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -
 .aff-val { font-size: 16px; font-weight: 600; }
 
 /* Grid des actions principales */
-.actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+.actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
 .action-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     padding: 15px 10px; border-radius: var(--border-radius-md); border: none;
@@ -100,7 +100,7 @@ body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -
 /* Statistiques du bas */
 .wallet-footer { display: flex; gap: 15px; }
 .stat-box {
-    flex: 1; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; text-align: center;
+    flex: 1; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; text-align: center;
 }
 .stat-box .box-title { font-size: 12px; opacity: 0.7; margin-bottom: 5px; }
 .stat-box .box-amount { font-size: 18px; font-weight: 700; }
@@ -256,7 +256,7 @@ input:focus, select:focus { border-color: var(--accent-blue); background: #fff; 
 
 @media (max-width: 600px) {
     .container { width: 95%; margin: 20px auto; }
-    .wallet-card { padding: 25px 20px; }
+    .wallet-card { padding: 18px 20px; }
     .amount { font-size: 36px; }
     .wallet-header { flex-direction: column; align-items: flex-start; gap: 15px; }
     .header-badges { flex-wrap: wrap; }
@@ -392,6 +392,20 @@ input:focus, select:focus { border-color: var(--accent-blue); background: #fff; 
 </div>
 
 
+<!-- Popup Annonce (Dernière annonce active non encore consultée) -->
+<div id="announcementPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-blue">
+            <h3 id="annPopupTitle">📢 Annonce</h3>
+        </div>
+        <div class="popup-body">
+            <div id="annPopupDate" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;"></div>
+            <div id="annPopupMessage" style="font-size:14px; color:var(--text-main); white-space:pre-wrap; line-height:1.6;"></div>
+            <button onclick="closeAnnouncementPopup()" class="btn-primary" style="margin-top:20px;">OK</button>
+        </div>
+    </div>
+</div>
+
 <div class="container hidden" id="dashboard-section">
 
     <div class="wallet-card">
@@ -482,6 +496,7 @@ input:focus, select:focus { border-color: var(--accent-blue); background: #fff; 
     <svg viewBox="0 0 24 24">
         <path d="M12 2C6.477 2 2 6.477 2 12c0 1.848.5 3.582 1.383 5.093L2 22l4.907-1.383A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.636 0-3.18-.396-4.52-1.096l-.326-.17-3.16.892.892-3.16-.17-.326A7.954 7.954 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path>
     </svg>
+    <span id="supportBadge" class="badge-indicator" style="display:none;"></span>
 </button>
 
 <div class="support-window" id="supportChatWindow">
@@ -524,11 +539,18 @@ let currentUser = null;
 window._clientNotifications = []; 
 window._clientHistory = [];
 window._clientWithdrawRequests = [];
+window._clientSupportMessagesCount = 0; // nb de messages Assistant (pour la badge, même système que notif/hist)
 
 let recipientId = null;
 let recipientDataTemp = null;
 let searchTimeout = null;
 let chatUnsubscribe = null; // Pour le nettoyage si besoin
+
+// --- Suivi du statut utilisateur (léger, réutilise le champ "status" de login.html) ---
+let statusCheckIntervalId = null;
+let lastStatusCheckTime = 0;
+const STATUS_CHECK_INTERVAL_MS = 60000; // vérification périodique toutes les 60s
+const STATUS_CHECK_MIN_GAP_MS = 15000;  // évite de re-vérifier trop souvent au retour au premier plan
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -537,6 +559,16 @@ onAuthStateChanged(auth, async (user) => {
         if(snap.exists()) {
             const userData = snap.data();
             if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+
+            // --- Vérification du statut au chargement (mêmes valeurs que login.html) ---
+            const initialStatus = userData.status || "Actif";
+            lastStatusCheckTime = Date.now();
+            if (initialStatus === "Désactivé" || initialStatus === "Banni") {
+                await window.handleForcedLogout();
+                return;
+            }
+            // Démarre la vérification périodique + au retour au premier plan
+            window.startStatusWatcher();
             
             document.getElementById("dashboard-section").classList.remove("hidden");
             document.getElementById("clientName").textContent = userData.fullName;
@@ -562,11 +594,54 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+/* ========================================================================= */
+/* --- VERIFICATION DU STATUT UTILISATEUR (Actif / Désactivé / Banni) --- */
+/* Réutilise exactement le champ "status" et les valeurs définies dans      */
+/* login.html. Vérification légère : simple lecture ponctuelle du document, */
+/* pas d'écouteur temps réel dédié, pour ne pas alourdir la page.           */
+/* ========================================================================= */
+window.checkUserStatus = async () => {
+    if (!currentUser) return;
+    try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        lastStatusCheckTime = Date.now();
+        if (!snap.exists()) return;
+        const status = snap.data().status || "Actif";
+        if (status === "Désactivé" || status === "Banni") {
+            await window.handleForcedLogout();
+        }
+    } catch (e) {
+        console.error("Erreur lors de la vérification du statut : ", e);
+    }
+};
+
+window.handleForcedLogout = async () => {
+    if (statusCheckIntervalId) { clearInterval(statusCheckIntervalId); statusCheckIntervalId = null; }
+    document.removeEventListener("visibilitychange", window.handleVisibilityStatusCheck);
+    try { await signOut(auth); } catch (e) { /* déjà déconnecté */ }
+    window.location.href = "principal.html";
+};
+
+window.handleVisibilityStatusCheck = () => {
+    if (document.visibilityState === "visible" && currentUser) {
+        if (Date.now() - lastStatusCheckTime > STATUS_CHECK_MIN_GAP_MS) {
+            window.checkUserStatus();
+        }
+    }
+};
+
+window.startStatusWatcher = () => {
+    if (statusCheckIntervalId) return; // déjà démarré, évite les doublons
+    statusCheckIntervalId = setInterval(window.checkUserStatus, STATUS_CHECK_INTERVAL_MS);
+    document.addEventListener("visibilitychange", window.handleVisibilityStatusCheck);
+};
+
 
 /* ========================================================================= */
 /* --- SYSTEME DE DISCUSSION TEMPS REEL (ASSISTANT) --- */
 /* ========================================================================= */
 function initSupportChat(uid) {
+    if (chatUnsubscribe) return; // écouteur déjà actif, évite un doublon (perf)
     const q = query(collection(db, "users", uid, "support_messages"), orderBy("date", "asc"));
     
     chatUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -576,10 +651,13 @@ function initSupportChat(uid) {
             body.innerHTML = `<div class="msg-bubble msg-bot">
                 Bonjour ! Je suis l'assistant de BrainyWallet. Comment puis-je vous aider avec votre compte aujourd'hui ?
             </div>`;
+            window._clientSupportMessagesCount = 0;
+            window.updateBadges();
             return;
         }
 
         let html = "";
+        let assistantMsgCount = 0;
         snapshot.forEach(docSnap => {
             const msg = docSnap.data();
             const timeStr = new Date(msg.date).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
@@ -589,16 +667,32 @@ function initSupportChat(uid) {
                 html += `<div class="msg-bubble msg-user">${textEscaped} <span class="msg-time" style="color:rgba(255,255,255,0.7)">${timeStr}</span></div>`;
             } else {
                 html += `<div class="msg-bubble msg-bot">${textEscaped} <span class="msg-time">${timeStr}</span></div>`;
+                assistantMsgCount++;
             }
         });
         
         body.innerHTML = html;
         body.scrollTop = body.scrollHeight;
+
+        // --- Badge Assistant : même système que notifBadge / histBadge ---
+        window._clientSupportMessagesCount = assistantMsgCount;
+        const chatWin = document.getElementById('supportChatWindow');
+        if (chatWin && chatWin.classList.contains('active')) {
+            // La discussion est déjà ouverte : les messages sont considérés comme consultés
+            setSeenCount("support", assistantMsgCount);
+        }
+        window.updateBadges();
     });
 }
 
 window.toggleSupportChat = () => {
-    document.getElementById('supportChatWindow').classList.toggle('active');
+    const win = document.getElementById('supportChatWindow');
+    win.classList.toggle('active');
+    if (win.classList.contains('active')) {
+        // L'utilisateur ouvre la discussion : marquer les messages Assistant comme consultés
+        setSeenCount("support", window._clientSupportMessagesCount || 0);
+        window.updateBadges();
+    }
     setTimeout(() => {
         const body = document.getElementById('supportChatBody');
         body.scrollTop = body.scrollHeight;
@@ -886,6 +980,8 @@ window.submitWithdrawal = async () => {
 /* --- FIN SCRIPTS GESTION RETRAITS --- */
 
 window.loadAnnouncements = () => {
+    if (window._announcementsListenerAttached) return; // évite un double listener onSnapshot (perf)
+    window._announcementsListenerAttached = true;
     const q = query(collection(db, "announcements"), orderBy("date", "desc"));
     onSnapshot(q, (snapshot) => {
         const display = document.getElementById("announcementsDisplay");
@@ -894,6 +990,7 @@ window.loadAnnouncements = () => {
             return;
         }
         let html = "";
+        let latestActive = null; // la plus récente annonce active (snapshot déjà trié par date desc)
         snapshot.forEach(docSnap => {
             const ann = docSnap.data();
             let dateStr = new Date(ann.date).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
@@ -906,9 +1003,39 @@ window.loadAnnouncements = () => {
                     <div style="font-size: 14px; color: var(--text-muted); white-space: pre-wrap; line-height:1.6;">${ann.message}</div>
                 </div>
             `;
+            if (!latestActive && ann.isActive === true) {
+                latestActive = { id: docSnap.id, title: ann.title, message: ann.message, date: ann.date };
+            }
         });
         display.innerHTML = html;
+
+        if (latestActive) window.maybeShowAnnouncementPopup(latestActive);
     });
+};
+
+/* ========================================================================= */
+/* --- POPUP DE LA DERNIERE ANNONCE ACTIVE (non déjà consultée) --- */
+/* Mémorise uniquement l'identifiant de l'annonce déjà vue dans localStorage */
+/* (aucune donnée sensible du compte n'y est stockée).                      */
+/* ========================================================================= */
+window.maybeShowAnnouncementPopup = (ann) => {
+    if (!currentUser || !ann || !ann.id) return;
+    const storageKey = `bw_lastSeenAnnouncement_${currentUser.uid}`;
+    const lastSeenId = localStorage.getItem(storageKey);
+    if (lastSeenId === ann.id) return; // déjà consultée, ne pas ré-afficher
+
+    document.getElementById("annPopupTitle").textContent = "📢 " + (ann.title || "Annonce");
+    document.getElementById("annPopupDate").textContent = new Date(ann.date).toLocaleString('fr-FR', {dateStyle: 'long', timeStyle: 'short'});
+    document.getElementById("annPopupMessage").textContent = ann.message || "";
+    window._pendingAnnouncementId = ann.id;
+    document.getElementById("announcementPopup").classList.add("show");
+};
+
+window.closeAnnouncementPopup = () => {
+    document.getElementById("announcementPopup").classList.remove("show");
+    if (currentUser && window._pendingAnnouncementId) {
+        localStorage.setItem(`bw_lastSeenAnnouncement_${currentUser.uid}`, window._pendingAnnouncementId);
+    }
 };
 
 window.logout = () => signOut(auth).then(()=> window.location.href="principal.html");
@@ -926,9 +1053,11 @@ function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser.uid}_${k}`,
 window.updateBadges = () => {
   const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif"));
   const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
-  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
+  const uS = Math.max(0, (window._clientSupportMessagesCount || 0) - getSeenCount("support"));
+  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge"); const sb = document.getElementById("supportBadge");
   if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "flex" : "none"; }
   if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "flex" : "none"; }
+  if(sb) { sb.textContent = uS; sb.style.display = uS > 0 ? "flex" : "none"; }
 };
 
 window.openNotifPopup = () => {
